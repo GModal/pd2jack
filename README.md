@@ -78,7 +78,7 @@ Another option (there are many with 16 ports):
     
     [dac~ 2 3] [dac~ 1 4]
 
-The patch "A4x4_swap.pd" routes audio inputs 1 & 2 to outputs 3 & 4, and inputs 3 & 4 to outputs 1 & 2 (This example is relatively meaningless, of course, since I/O routing is the specialty of JACK):
+The patch "A4x4_swap.pd" routes audio inputs 1 & 2 to outputs 3 & 4, and inputs 3 & 4 to outputs 1 & 2 (This example is relatively meaningless, of course, since I/O routing is the speciality of JACK):
 
 ![4x4swap pic](resource/ps2j_A4x4_swap.png)
 
@@ -221,4 +221,10 @@ A simple *Makefile* is included. Open a console in the *pd2jack* install dir, an
 And if it's to be installed system-wide. This does depend on LibPd being installed.
 
     sudo make install
+
+### Links:
+
+- [Camomile](https://github.com/pierreguillot/Camomile)
+- [libpd](https://github.com/libpd)
+- [Pure Data](https://puredata.info/)
 

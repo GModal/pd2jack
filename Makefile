@@ -29,7 +29,7 @@ else
     PLATFORM = linux
     EXEDIR = /usr/bin
     CXXFLAGS = -D__UNIX_JACK__ -D__LINUX_ALSA__
-    AUDIO_API = -ljack -lasound -pthread
+    AUDIO_API = -ljack -lasound -lpthread
   endif
 endif
 
