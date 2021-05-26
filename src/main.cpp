@@ -7,7 +7,8 @@
 // https://github.com/danielhams
 //
 // "pd2jack"
-//  by Doug Garmon
+// https://github.com/GModal/pd2jack
+//  	by Doug Garmon
 
 #include <stdio.h>
 #include <errno.h>
@@ -60,8 +61,8 @@ pd::Patch patch;
 
 // buffer pointers
 const int MAX_AUDIO_PORTS = 16;
-float *input;
-float *output;
+float *input = NULL;
+float *output = NULL;
 
 const int MAX_MIDI_PORTS = 16;
 void * midi_buffer;
@@ -115,10 +116,6 @@ int process(jack_nframes_t nframes, void *arg){
     
     // ----------------------------------------------------------------------------------------
     // -------------------------- Midi --------------------------------------------------------
-    
-	// get the transport state of the JACK server
-	// Not used...
-	//transport = jack_transport_query( client, &position );
   
     for( jack_nframes_t port = 0 ; port < MidiIn_TotalPorts ; ++port )
     {
@@ -137,32 +134,26 @@ int process(jack_nframes_t nframes, void *arg){
 			switch ((long)in_event.buffer[0] & MIDI_STATUS) {
 
 				case NOTE_OFF :
-				//std::cout << "Note Off: "  << (long)in_event.buffer[1]  << std::endl;
 				lpd.sendNoteOn(pdMidiChannel, (long)in_event.buffer[1], 0);
 				break;
 				
 				case NOTE_ON :
-				//std::cout << "Note On: "  << (long)in_event.buffer[1] << " Chan: " << midiChannel << std::endl;
 				lpd.sendNoteOn(pdMidiChannel, (long)in_event.buffer[1], (long)in_event.buffer[2]);
 				break;
 			
 				case POLY_AFTERTOUCH :
-				//std::cout << "Poly Aftertouch: "  << (long)in_event.buffer[1]  << std::endl;
 				lpd.sendPolyAftertouch(pdMidiChannel, (long)in_event.buffer[1], (long)in_event.buffer[2]);
 				break;
 				
 				case CONT_CTRL :
-				//std::cout << "CC: "  << (long)in_event.buffer[1] << " " << (long)in_event.buffer[2] << std::endl;
 				lpd.sendControlChange(pdMidiChannel, (long)in_event.buffer[1], (long)in_event.buffer[2]);
 				break;
 				
 				case PROGRAM_CHANGE :
-				//std::cout << "Prog Chg: "  << (long)in_event.buffer[1]  << std::endl;
 				lpd.sendProgramChange(pdMidiChannel, (long)in_event.buffer[1]);
 				break;
 			
 				case CHANNEL_AFTERTOUCH :
-				//std::cout << "Chan Aftertouch: "  << (long)in_event.buffer[1]  << std::endl;
 				lpd.sendAftertouch(pdMidiChannel, (long)in_event.buffer[1]);
 				break;
 				
@@ -170,10 +161,6 @@ int process(jack_nframes_t nframes, void *arg){
 				// Do the pitchbend math
 				bend = ((in_event.buffer[2] << 7) + in_event.buffer[1]) - 8192;
 				lpd.sendPitchBend(pdMidiChannel, bend);
-								
-				//std::cout << "Incoming PitchBend: Status- " << std::hex << (unsigned int)(in_event.buffer[0] & 0xF0);
-				//std::cout << std::dec << " Value: lsb (1) "  << (long)in_event.buffer[1] << " msb (2) " << (long)in_event.buffer[2]  << std::endl;				
-				//std::cout << "Incoming Bend: " << bend << endl;
 				break;
 				
 			}
@@ -270,9 +257,6 @@ void PdObject::receivePitchBend(const int channel, const int value) {
 	iMsg.data[1] = (unsigned char)(pbValue & 0x007F);
 	iMsg.data[2] = (unsigned char)((pbValue) >> 7) & 0x007F;
 	msgQ.push(iMsg);
-	
-	//cout << "Output val: " << value << " 1:  " << (unsigned int)iMsg.data[1] << " 2: " <<  (unsigned int)iMsg.data[2] << endl;
-	//cout << "CPP MIDI: pitch bend: " << channel << " " << value << endl;
 }
 
 void PdObject::receiveAftertouch(const int channel, const int value) {
@@ -283,7 +267,6 @@ void PdObject::receiveAftertouch(const int channel, const int value) {
 	iMsg.data[0] = (unsigned char)channel;
 	iMsg.data[1] = (unsigned char)value;
 	msgQ.push(iMsg);
-	//cout << "CPP MIDI: aftertouch: " << channel << " " << value << endl;
 }
 
 void PdObject::receivePolyAftertouch(const int channel, const int pitch, const int value) {
@@ -295,7 +278,6 @@ void PdObject::receivePolyAftertouch(const int channel, const int pitch, const i
 	iMsg.data[1] = (unsigned char)pitch;
 	iMsg.data[2] = (unsigned char)value;
 	msgQ.push(iMsg);
-	//cout << "CPP MIDI: poly aftertouch: " << channel << " " << pitch << " " << value << endl;
 }
 
 // --------------------------------------------------------------------------------------
@@ -470,7 +452,6 @@ lpd.addFloat(parameter);
 		if (tok) { 
 			cnt++;
 		    parameter = strtod(tok, NULL);
-		    //cout << parameter << " ";
 		    lpd.addFloat(parameter);
 		    }
 	}
@@ -601,8 +582,10 @@ int main (int argc, char *argv[]) {
 			if(patch.isValid( )) {
 				// 		init the port buffers
 				bufsize = jack_get_buffer_size(client);
-				input = (float*)malloc(bufsize*AudioIn_TotalPorts*sizeof(float));
-				output  = (float*)malloc(bufsize*AudioOut_TotalPorts*sizeof(float));
+				if (AudioIn_TotalPorts)
+					input = (float*)malloc(bufsize*AudioIn_TotalPorts*sizeof(float));
+				if (AudioOut_TotalPorts)
+					output  = (float*)malloc(bufsize*AudioOut_TotalPorts*sizeof(float));
 				
 				// 		initialize the Audio ports
 				initJPorts();
