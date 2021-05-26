@@ -22,7 +22,7 @@ The patch is a very simple example of routing by MIDI port/channel offsets.
 
 ![synths.pd pic](resource/pd2j_synths2.png)
 
-See the "MIDI ports" section below for an explaination of this patch...
+See the "MIDI ports" section below for an explanation of this patch...
 
 ### Startup Options
 
