@@ -1,4 +1,4 @@
-#N canvas 907 252 896 464 10;
+#N canvas 616 387 896 464 10;
 #X obj 66 48 notein;
 #X obj 66 83 noteout;
 #X obj 138 48 ctlin;
@@ -13,6 +13,11 @@
 #X obj 446 73 pgmout;
 #X obj 210 74 - 8192;
 #X text 216 129 ^ Read bendin / bendout help;
+#X obj 295 224 sysexin;
+#X obj 295 257 midiout;
+#X obj 368 223 midirealtimein;
+#X obj 368 257 midiout;
+#X obj 404 300 print Pd RT:;
 #X connect 0 0 1 0;
 #X connect 0 1 1 1;
 #X connect 0 2 1 2;
@@ -29,3 +34,8 @@
 #X connect 10 0 11 0;
 #X connect 10 1 11 1;
 #X connect 12 0 7 0;
+#X connect 14 0 15 0;
+#X connect 14 1 15 1;
+#X connect 16 0 17 0;
+#X connect 16 0 18 0;
+#X connect 16 1 17 1;

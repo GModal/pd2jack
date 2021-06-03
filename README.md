@@ -33,7 +33,7 @@ Help: pd2jack <options> -p 'file.pd' <'param strs'>
  Optional args:
 -a : Audio ports (0-16) - default: 2:2 
 -h : Help msg 
--m : Midi ports (0-16) - default: 0:0
+-m : Midi ports (0-16) - default: 1:1
 -n : JACK port Name - default: pd2jack
 -s : Silence Pd [print] objects (no args) - default: Not silent
 -v : verbosity (0-1) - default: 0
@@ -192,7 +192,9 @@ YES, it would be trivial to add **named** send/receive pairs to this application
 
 The *pd2jack* app is built on and requires **LibPd**. A **LibPd** build is dependent on a current **Pure Data** installation (source and build). The **Pure Data** distribution is a subdir in a **LibPd** install -- both can be fetched by recursively cloning the **LibPd** GIT.
 
-The pd2jack project currently currently uses the **LibPd** Library dynamically-linked, so LibPd must be compiled (AFAIK the library isn't pre-compiled for Ubuntu, for instance).
+As of the first "official" release *pd2jack* is currently statically-linked to the **LibPd** Library (libpd.a). This results in a larger executable, but as *LibPd* isn't widely available in a distro package format (deb, rpm, etc), it's the only way to distribute the project without building the dependencies from source (AFAIK, the library isn't pre-compiled for Ubuntu, for instance).
+
+Building from source is a good idea, though. Here's how:
 
 ## Build and install LibPd
 
@@ -200,9 +202,9 @@ Also follow the compilation instructions for **LibPd**, and install -
 
     git clone --recurse-submodules https://github.com/libpd/libpd.git
 
-Then make the build:
+Then make the build (cd to the "libpd" dir):
 
-    make
+    make STATIC=true
     sudo make install
 
 The **LibPd** libraries and includes are installed in less-commonly used locations, but the **pd2jack** *Makefile* should work with the standard setup. Those locations -
@@ -218,7 +220,11 @@ A simple *Makefile* is included. Open a console in the *pd2jack* install dir, an
 
     make
 
-And if it's to be installed system-wide. This does depend on LibPd being installed.
+**Optional**: the size of the executable can be reduced (by ~10%) by entering:
+
+    strip pd2jack
+
+And if it's to be installed system-wide:
 
     sudo make install
 

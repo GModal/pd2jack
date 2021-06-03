@@ -1,3 +1,6 @@
+27_5_2021
+- Makefile now links LibPd library statically
+- Change "help->Midi port->default" msg to "- default 1:1"
 
 26_5_2021
 - cleanup comments

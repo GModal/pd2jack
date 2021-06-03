@@ -15,37 +15,45 @@ SOLIB_PREFIX = lib
 ifeq ($(UNAME), Darwin)  # Mac
   SOLIB_EXT = dylib
   PLATFORM = mac
-  CXXFLAGS = -D__MACOSX_CORE__ -DHAVE_UNISTD_H
+  CFLAGS = -D__MACOSX_CORE__ -DHAVE_UNISTD_H
   AUDIO_API = -framework Foundation -framework CoreAudio
 else
   ifeq ($(OS), Windows_NT)  # Windows, use Mingw
     SOLIB_EXT = dll
     SOLIB_PREFIX = 
     PLATFORM = windows
-    CXXFLAGS = -D__WINDOWS_DS__
+    CFLAGS = -D__WINDOWS_DS__
     AUDIO_API = -lole32 -loleaut32 -ldsound -lwinmm
   else  # assume Linux
     SOLIB_EXT = so
+    ALIB_EXT = a
     PLATFORM = linux
+    CFLAGS = -D__UNIX_JACK__ -D__LINUX_ALSA__
     EXEDIR = /usr/bin
-    CXXFLAGS = -D__UNIX_JACK__ -D__LINUX_ALSA__
-    AUDIO_API = -ljack -lasound -lpthread
+    AUDIO_API = -ljack -lasound -lpthread -lm -ldl
   endif
+endif
+
+ifeq ($(DEBUG), true)
+    CXXFLAGS = -g $(CFLAGS)
+else
+	CXXFLAGS = $(CFLAGS)
 endif
 
 LIBPD_DIR = /usr/local
 LIBPD = $(LIBPD_DIR)/lib/libpd.$(SOLIB_EXT)
+LIBPDA = $(LIBPD_DIR)/lib/libpd.$(ALIB_EXT)
 
-SRC_FILES = src/PdObject.cpp src/main.cpp
+SRC_FILES = src/PdObject.cpp src/main.cpp src/pd2jack.hpp
 TARGET = pd2jack
 
-CXXFLAGS = -I$(LIBPD_DIR)/include/libpd/util -I$(LIBPD_DIR)/include/libpd \
+CXXFLAGS += -I$(LIBPD_DIR)/include/libpd/util -I$(LIBPD_DIR)/include/libpd -Wl,–export-dynamic \
            -I./src -std=c++11 -DLIBPD_USE_STD_MUTEX -O3
 
 .PHONY: clean clobber
 
-$(TARGET): ${SRC_FILES:.cpp=.o} $(LIBPD)
-	g++ -o $(TARGET) $^ $(LIBPD) $(AUDIO_API)
+$(TARGET): ${SRC_FILES:.cpp=.o} $(LIBPDA)
+	g++ -o $(TARGET) $^ -L.$(LIBPDA) $(AUDIO_API)
 ifeq ($(PLATFORM), mac)
 	mkdir -p ./libs && cp $(LIBPD) ./libs
 endif

@@ -1,0 +1,4 @@
+
+for the initial release v0.1.0 (3 June 2021)
+	- MIDI Sysex msgs larger than 512 are not sent correctly, and will probably send garbage.
+	- MIDI RT Song Position & Song Select are not implemented.
