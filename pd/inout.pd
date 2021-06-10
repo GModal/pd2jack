@@ -1,4 +1,4 @@
-#N canvas 616 387 896 464 10;
+#N canvas 218 275 1131 464 10;
 #X obj 66 48 notein;
 #X obj 66 83 noteout;
 #X obj 138 48 ctlin;
@@ -13,11 +13,25 @@
 #X obj 446 73 pgmout;
 #X obj 210 74 - 8192;
 #X text 216 129 ^ Read bendin / bendout help;
-#X obj 295 224 sysexin;
-#X obj 295 257 midiout;
-#X obj 368 223 midirealtimein;
-#X obj 368 257 midiout;
-#X obj 404 300 print Pd RT:;
+#X obj 256 284 sysexin;
+#X obj 256 335 midiout;
+#X obj 329 283 midirealtimein;
+#X obj 329 340 midiout;
+#X obj 183 334 midiout;
+#X obj 183 284 midiin;
+#X text 558 104 /// for some reason \, [midiin] \, [sysexin] & [realtimein]
+add 2 to the /// port num \, so sending to port 1 in PdBase returns
+port 3 in pd /// /// however \, [midiout] \, [sysexout] \, & [realtimeout]
+do not add to the /// port num \, so sending port 1 to [midiout] returns
+port 1 in PdBase, f 69;
+#X obj 217 308 - 2;
+#X obj 295 309 - 2;
+#X obj 410 312 - 2;
+#X msg 310 210 0;
+#X obj 310 172 loadbang;
+#X obj 473 316 s P2J;
+#X msg 473 286 RTschema 2;
+#X text 484 259 Set RT schema to "send as RT";
 #X connect 0 0 1 0;
 #X connect 0 1 1 1;
 #X connect 0 2 1 2;
@@ -35,7 +49,16 @@
 #X connect 10 1 11 1;
 #X connect 12 0 7 0;
 #X connect 14 0 15 0;
-#X connect 14 1 15 1;
+#X connect 14 1 22 0;
 #X connect 16 0 17 0;
-#X connect 16 0 18 0;
-#X connect 16 1 17 1;
+#X connect 16 1 23 0;
+#X connect 19 0 18 0;
+#X connect 19 1 21 0;
+#X connect 21 0 18 1;
+#X connect 22 0 15 1;
+#X connect 23 0 17 1;
+#X connect 24 0 21 1;
+#X connect 24 0 22 1;
+#X connect 24 0 23 1;
+#X connect 25 0 24 0;
+#X connect 27 0 26 0;

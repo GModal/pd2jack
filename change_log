@@ -1,3 +1,14 @@
+6_6_2021
+v0.2.0 Branch
+Virtually a complete rewrite of the JACK MIDI code
+- One general midi class, vs. three previously
+- much more streamlined
+Added debug option to Makefile (DEBUG=true)
+
+3_6_2021
+v0.1.0
+First official release
+
 27_5_2021
 - Makefile now links LibPd library statically
 - Change "help->Midi port->default" msg to "- default 1:1"

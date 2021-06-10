@@ -3,7 +3,7 @@
 
 ...is a shell application for running **Pure Data** patches as minimalist JACK clients, using **LibPd**. I.E., the patches run "headless" and without a GUI. However, parameters can be passed to the patch from the cmd line. See "Passing Parameters" below...
 
-*This is alpha software. **pd2jack** has currently been tested in Linux. It **may** compile and work with Mac & Windows, but that's unknown.*
+ * This has moved up to an early "beta" version. **pd2jack** has currently been tested only on Linux.
 
 ### Features
 
@@ -190,34 +190,25 @@ YES, it would be trivial to add **named** send/receive pairs to this application
 
 ## Compiliation and Installation
 
-The *pd2jack* app is built on and requires **LibPd**. A **LibPd** build is dependent on a current **Pure Data** installation (source and build). The **Pure Data** distribution is a subdir in a **LibPd** install -- both can be fetched by recursively cloning the **LibPd** GIT.
+The *pd2jack* app is built on and requires **LibPd**. A **LibPd** build is dependent on a current **Pure Data** installation (source and build). The **Pure Data** distribution is a subdir in a **LibPd** install. **LibPd** and it's dependencies are a submodule of the *pd2jack* GIT.
 
 As of the first "official" release *pd2jack* is currently statically-linked to the **LibPd** Library (libpd.a). This results in a larger executable, but as *LibPd* isn't widely available in a distro package format (deb, rpm, etc), it's the only way to distribute the project without building the dependencies from source (AFAIK, the library isn't pre-compiled for Ubuntu, for instance).
 
 Building from source is a good idea, though. Here's how:
 
-## Build and install LibPd
+## Clone pd2jack
 
-Also follow the compilation instructions for **LibPd**, and install - 
+Create a folder where source and build will reside, then open a console and enter:
 
-    git clone --recurse-submodules https://github.com/libpd/libpd.git
+    git clone --recurse-submodules https://github.com/GModal/pd2jack.git
 
-Then make the build (cd to the "libpd" dir):
-
-    make STATIC=true
-    sudo make install
-
-The **LibPd** libraries and includes are installed in less-commonly used locations, but the **pd2jack** *Makefile* should work with the standard setup. Those locations -
-
-    /usr/local/lib
-    /usr/local/include(/libpd)
-
-If **LibPd** is installed elsewhere, the pd2jack *Makefile* will need changing.
+Cloning the project recursively will also clone the sources of **LibPd** and **Pure Data**.
 
 ## Build and install pd2jack
 
-A simple *Makefile* is included. Open a console in the *pd2jack* install dir, and enter:
+A simple *Makefile* is included. Open a console in the *pd2jack* build folder, and enter:
 
+    make libpd
     make
 
 **Optional**: the size of the executable can be reduced (by ~10%) by entering:
