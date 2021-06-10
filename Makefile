@@ -1,11 +1,13 @@
-# 
+#  Original Makefile for libpd by:
 # copyright (c) 2014 rafael vega <rvega@elsoftwarehamuerto.org>
 # 
 # bsd simplified license.
 # for information on usage and redistribution, and for a disclaimer of all
 # warranties, see the file, "license.txt," in this distribution.
-# 
-# see https://github.com/libpd/libpd for documentation
+#     see https://github.com/libpd/libpd for documentation
+#
+# for "pd2jack"
+#   by Doug Garmon
 #
 
 # detect platform, move libpd dylib to local folder on mac
@@ -40,17 +42,16 @@ else
 	CXXFLAGS = $(CFLAGS)
 endif
 
-LIBPD_DIR = /usr/local
-LIBPD = $(LIBPD_DIR)/lib/libpd.$(SOLIB_EXT)
-LIBPDA = $(LIBPD_DIR)/lib/libpd.$(ALIB_EXT)
+LIBPD_DIR = ./libpd
+LIBPDA = $(LIBPD_DIR)/libs/libpd.$(ALIB_EXT)
 
 SRC_FILES = src/PdObject.cpp src/main.cpp src/pd2jack.hpp
 TARGET = pd2jack
 
-CXXFLAGS += -I$(LIBPD_DIR)/include/libpd/util -I$(LIBPD_DIR)/include/libpd -Wl,–export-dynamic \
+CXXFLAGS += -I$(LIBPD_DIR)/cpp -I$(LIBPD_DIR)/libpd_wrapper -I$(LIBPD_DIR)/libpd_wrapper/util -Wl,–export-dynamic \
            -I./src -std=c++11 -DLIBPD_USE_STD_MUTEX -O3
 
-.PHONY: clean clobber
+.PHONY: clean clobber libpd
 
 $(TARGET): ${SRC_FILES:.cpp=.o} $(LIBPDA)
 	g++ -o $(TARGET) $^ -L.$(LIBPDA) $(AUDIO_API)
@@ -73,3 +74,6 @@ install:
 
 uninstall:
 	rm -f $(EXEDIR)/$(TARGET)
+	
+libpd:
+	cd libpd ; $(MAKE) STATIC=true
