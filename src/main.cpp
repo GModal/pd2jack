@@ -9,7 +9,7 @@
 // "pd2jack"
 // https://github.com/GModal/pd2jack
 //  	by Doug Garmon
-// v0.1.5 working
+// v0.1.6 working
 
 #include <stdio.h>
 #include <errno.h>
