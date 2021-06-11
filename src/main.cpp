@@ -9,7 +9,7 @@
 // "pd2jack"
 // https://github.com/GModal/pd2jack
 //  	by Doug Garmon
-// v0.2.0 working
+// v0.1.5 working
 
 #include <stdio.h>
 #include <errno.h>
@@ -184,8 +184,6 @@ int process(jack_nframes_t nframes, void *arg) {
 			if ( stillValid) {
 				switch (genEvent) {
 					// RT one byte
-					// NOTE: currently NOT using LibPd sendRealTimeByte() for system real-time, 
-					// as that seems less reliable and shifts the port number. 
 					
 					// technically a system common msg, so don't send as RT
 					case TUNE_REQUEST :
@@ -201,6 +199,7 @@ int process(jack_nframes_t nframes, void *arg) {
 					case ACTIVE_SENSING :
 					case SYSTEM_RESET :
 					
+					// Optional: send all single status bytes as "regular" bytes. Probably not really useful...
 					switch (RTsendSchema) {
 						// send as a regular byte
 						case RTSEND_PLAIN:
@@ -306,8 +305,6 @@ void PdObject::receiveFloat(const std::string& dest, float num) {
 void PdObject::receiveMessage(const std::string& dest, const std::string& msg, const List& list) {
 	int lsft = 0;
 	std::string RTSchStr = "RTschema";
-	
-	//cout << "P2J: message " << dest << ": " << msg << " :-: " << list.toString() << list.types() << endl;
 	
 	// Message: "RTschema"--
 	//		format: "P2J RTschema <#>"
