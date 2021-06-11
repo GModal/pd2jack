@@ -14,7 +14,6 @@
 #pragma once
 
 #include "PdBase.hpp"
-//#include "pd2jack.h"
 
 // custom receiver class
 class PdObject : public pd::PdReceiver, public pd::PdMidiReceiver {
