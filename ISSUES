@@ -1,3 +1,7 @@
+11_6_2021
+	- Added Song Position & Song Select
+	- Added MTC
+	- Makefile changes; build is still static
 
 for the initial release v0.1.0 (3 June 2021)
 	- MIDI Sysex msgs larger than 512 are not sent correctly, and will probably send garbage.

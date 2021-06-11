@@ -9,6 +9,9 @@
 # for "pd2jack"
 #   by Doug Garmon
 #
+# The Mac & Windows conditionals & compilation will almost certainly NOT work -- sorry. 
+#     But they included as a starting point...
+#
 
 # detect platform, move libpd dylib to local folder on mac
 UNAME = $(shell uname)
@@ -28,10 +31,12 @@ else
     AUDIO_API = -lole32 -loleaut32 -ldsound -lwinmm
   else  # assume Linux
     SOLIB_EXT = so
-    ALIB_EXT = a
+    alib_ext = a
     PLATFORM = linux
+    prefix = /usr
+    exec_prefix = ($prefix)
+    bindir = ($exec_prefix)/bin
     CFLAGS = -D__UNIX_JACK__ -D__LINUX_ALSA__
-    EXEDIR = /usr/bin
     AUDIO_API = -ljack -lasound -lpthread -lm -ldl
   endif
 endif
@@ -43,7 +48,7 @@ else
 endif
 
 LIBPD_DIR = ./libpd
-LIBPDA = $(LIBPD_DIR)/libs/libpd.$(ALIB_EXT)
+LIBPDA = $(LIBPD_DIR)/libs/libpd.$(alib_ext)
 
 SRC_FILES = src/PdObject.cpp src/main.cpp src/pd2jack.hpp
 TARGET = pd2jack
@@ -70,7 +75,7 @@ endif
 	cd $(LIBPD_DIR) && make clobber
 
 install:
-	install -m 755 $(TARGET) $(EXEDIR)
+	install -m 755 $(TARGET) $(bindir)
 
 uninstall:
 	rm -f $(EXEDIR)/$(TARGET)

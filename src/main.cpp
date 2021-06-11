@@ -216,14 +216,16 @@ int process(jack_nframes_t nframes, void *arg) {
 					break;
 					
 					//These are not RT, so send as regular bytes
+					case MTC_QUARTER_FRAME :
 					case SONG_SELECT :
-					// RT two bytes
+					
+					// (not) RT two bytes
 					lpd.sendMidiByte(port, (unsigned char)in_event.buffer[0]);
 					lpd.sendMidiByte(port, (unsigned char)in_event.buffer[1]);
 					break;
 					
 					case SONG_POSITION :
-					// RT three bytes				
+					// (not) RT three bytes				
 					for (int h = 0; h < 3; h++)
 						lpd.sendMidiByte(port, (unsigned char)in_event.buffer[h]);
 					break;
@@ -246,7 +248,7 @@ int process(jack_nframes_t nframes, void *arg) {
 	}
 
 	// cycle through the events in the MIDI "Ready" queue
-	// much simplified
+	// Now much simplified
 	for (int vIndex = 0; vIndex < mgReady.size(); vIndex++) {
 		oPort = mgReady[vIndex].mgPort;
 		
@@ -429,6 +431,7 @@ bool byte_OK = true;
 			
 			// two bytes RT --------------------------------------------
 			case SONG_SELECT :
+			case MTC_QUARTER_FRAME :
 				
 			mgMsg.mgDataV.clear();
 			mgMsg.mgType = MG_REALTIME_MIDI;
