@@ -34,8 +34,8 @@ else
     alib_ext = a
     PLATFORM = linux
     prefix = /usr
-    exec_prefix = ($prefix)
-    bindir = ($exec_prefix)/bin
+    exec_prefix = $(prefix)
+    bindir = $(exec_prefix)/bin
     CFLAGS = -D__UNIX_JACK__ -D__LINUX_ALSA__
     AUDIO_API = -ljack -lasound -lpthread -lm -ldl
   endif
