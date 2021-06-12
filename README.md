@@ -66,10 +66,12 @@ Open "./pd/rev_ctrl.pd" with:
 
 ## Pd patches (examples and utilities)
 
-There are two folders included, each containing Pure Data patches:
+There are two folders with Pd patches included:
 
- - pd : Example patches for loading into pd2jack
- - pd_util : testing utilities for midi data
+ - pd 
+     - Example patches for loading into *pd2jack*.
+ - pd_util
+     - Testing utilities for midi data (to run in a **Pure Data** install, for testing *pd2jack*).
 
 ## Detailed Info
 ### Audio ports
@@ -247,7 +249,6 @@ Cloning the project recursively will also clone the sources of **LibPd** and **P
 
 A simple *Makefile* is included. Open a console in the *pd2jack* build folder, and enter:
 
-    make libpd
     make
 
 **Optional**: the size of the executable can be reduced (by ~10%) by entering:
@@ -263,4 +264,8 @@ And if it's to be installed system-wide:
 - [Camomile](https://github.com/pierreguillot/Camomile)
 - [libpd](https://github.com/libpd)
 - [Pure Data](https://puredata.info/)
+
+### Special Thanks
+
+#### Special words of thanks to:
 
