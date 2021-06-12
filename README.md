@@ -3,12 +3,13 @@
 
 ...is a shell application for running **Pure Data** patches as minimalist JACK clients, using **LibPd**. I.E., the patches run "headless" and without a GUI. However, parameters can be passed to the patch from the cmd line. See "Passing Parameters" below...
 
- * This has moved up to an early "beta" version. **pd2jack** has currently only been tested on Linux.
+Now in beta release, **pd2jack** has currently only been tested on Linux.
 
 ### Features
 
  - Up to 16 audio ports and/or 16 MIDI ports can be opened per instance. Ports are defined at startup with cmd arguments, not by the Pd patch.
  - Parameters can be passed to the Pd patch from the shell (not interactively, currently).
+
 
 Example patch "synths.pd" (shown in the *Claudia* patchbay)
 

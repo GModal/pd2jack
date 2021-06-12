@@ -430,7 +430,6 @@ bool byte_OK = true;
 			case SONG_SELECT :
 			case MTC_QUARTER_FRAME :
 				
-			mgMsg.mgDataV.clear();
 			mgMsg.mgType = MG_REALTIME_MIDI;
 			mgMsg.mgStatus = MSG_IN_PROGRESS;
 			mgMsg.mgPort = port;
@@ -438,7 +437,6 @@ bool byte_OK = true;
 			mgMsg.mgCaptureCount = REALTIME_2 - 1;
 
 			mgMsg.mgDataV.push_back( ucByte);
-			mgMsg.mgBufferPtr = nullptr;
 			// add to vector
 			mgInProgress.push_back(mgMsg);
 			break;
@@ -446,7 +444,6 @@ bool byte_OK = true;
 			// two bytes RT --------------------------------------------
 			case SONG_POSITION :
 			
-			mgMsg.mgDataV.clear();
 			mgMsg.mgType = MG_REALTIME_MIDI;
 			mgMsg.mgStatus = MSG_IN_PROGRESS;
 			mgMsg.mgPort = port;
@@ -454,7 +451,6 @@ bool byte_OK = true;
 			mgMsg.mgCaptureCount = REALTIME_3 - 1;
 
 			mgMsg.mgDataV.push_back( ucByte);
-			mgMsg.mgBufferPtr = nullptr;
 			// add to vector
 			mgInProgress.push_back(mgMsg);
 			break;
@@ -474,7 +470,6 @@ bool byte_OK = true;
 			mgMsg.mgSize = REALTIME_1;
 
 			mgMsg.mgDataV.push_back( ucByte);
-			mgMsg.mgBufferPtr = nullptr;
 			// add to vector
 			mgReady.push_back(mgMsg);
 			break;
@@ -489,13 +484,12 @@ bool byte_OK = true;
 			}
 			
 			mgMsg.mgType = MG_SYSEX_MIDI;
-			mgMsg.mgDataV.clear();
 			mgMsg.mgStatus = MSG_IN_PROGRESS;
 			mgMsg.mgPort = port;
-
 			mgMsg.mgDataV.push_back(ucByte);
-			mgMsg.mgCaptureCount = CAPTURE_MAX;
-			mgMsg.mgBufferPtr = nullptr;
+			
+			// STUPID high count-down number for sysex transfers
+			mgMsg.mgCaptureCount = CAPTURE_MAX; 
 			// add to vector
 			mgInProgress.push_back(mgMsg);
 
@@ -538,7 +532,6 @@ bool byte_OK = true;
 	//push on Q
 	for (int qCount = 0; qCount < mgInProgress.size() ; qCount++) {	
 		if (mgInProgress[ qCount].mgStatus == MSG_DONE) {
-			//cout << "Stage 4-\tCapture done, push on Ready Q" << endl << endl; 
 			mgReady.push_back(mgInProgress[ qCount ]);
 			mgInProgress[ qCount].mgStatus = MSG_KILL;
 		}
@@ -822,7 +815,7 @@ int main (int argc, char *argv[]) {
 
 				case 'v':
 				verbose = atoi(optarg);
-				if (verbose < 0 || verbose > 1)
+				if (verbose < 0 || verbose > 2)
 					verbose = 0;
 				getcnt = optind;
 				break;
