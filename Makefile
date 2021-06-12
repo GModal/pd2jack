@@ -56,13 +56,16 @@ TARGET = pd2jack
 CXXFLAGS += -I$(LIBPD_DIR)/cpp -I$(LIBPD_DIR)/libpd_wrapper -I$(LIBPD_DIR)/libpd_wrapper/util -Wl,–export-dynamic \
            -I./src -std=c++11 -DLIBPD_USE_STD_MUTEX -O3
 
-.PHONY: clean clobber libpd
+.PHONY: clean clobber
 
-$(TARGET): ${SRC_FILES:.cpp=.o} $(LIBPDA)
+$(TARGET): ${SRC_FILES:.cpp=.o} $(LIBPDA) 
 	g++ -o $(TARGET) $^ -L.$(LIBPDA) $(AUDIO_API)
 ifeq ($(PLATFORM), mac)
 	mkdir -p ./libs && cp $(LIBPD) ./libs
 endif
+
+$(LIBPDA):
+	cd libpd ; $(MAKE) STATIC=true
 
 clean:
 	rm -f src/*.o
@@ -80,5 +83,3 @@ install:
 uninstall:
 	rm -f $(EXEDIR)/$(TARGET)
 	
-libpd:
-	cd libpd ; $(MAKE) STATIC=true

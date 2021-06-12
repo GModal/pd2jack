@@ -32,6 +32,9 @@ input. Pd's internal Midi input channel #s are multiples of 16: 1-16
 #X obj 531 256 pack 0 100;
 #X obj 237 360 dac~ 1 2 3;
 #X obj 434 153 notein 33;
+#X text 119 413 Invoke: ./pd2jack -m 3:0 -a 0:3 -p ./pd/synths.pd;
+#X text 105 438 (From the build dir \, if pd2jack isn't installed system-wide)
+;
 #X connect 0 0 1 0;
 #X connect 0 1 4 0;
 #X connect 1 0 11 0;

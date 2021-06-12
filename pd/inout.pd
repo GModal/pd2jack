@@ -19,19 +19,14 @@
 #X obj 329 340 midiout;
 #X obj 183 334 midiout;
 #X obj 183 284 midiin;
-#X obj 217 308 - 2;
-#X obj 295 309 - 2;
-#X obj 410 312 - 2;
-#X msg 310 210 0;
-#X obj 310 172 loadbang;
 #X obj 586 323 s P2J;
 #X msg 586 293 RTschema 2;
 #X text 583 346 Set RT schema to "send as plain byte";
-#X text 680 228 Bang this in the pd2jack internal patch \, and RT bytes
-will be sent as plain. You probably don't want to do this \, but it's
+#X text 682 290 <---;
+#X text 680 228 Bang this in the pd2jack internal patch \, and RT will
+be sent as plain bytes. You probably DON'T want to do this \, but it's
 the beginning of a framework of setting parameters via Pd messages...
 ;
-#X text 682 290 <---;
 #X connect 0 0 1 0;
 #X connect 0 1 1 1;
 #X connect 0 2 1 2;
@@ -49,16 +44,9 @@ the beginning of a framework of setting parameters via Pd messages...
 #X connect 10 1 11 1;
 #X connect 12 0 7 0;
 #X connect 14 0 15 0;
-#X connect 14 1 21 0;
+#X connect 14 1 15 1;
 #X connect 16 0 17 0;
-#X connect 16 1 22 0;
+#X connect 16 1 17 1;
 #X connect 19 0 18 0;
-#X connect 19 1 20 0;
-#X connect 20 0 18 1;
-#X connect 21 0 15 1;
-#X connect 22 0 17 1;
-#X connect 23 0 20 1;
-#X connect 23 0 21 1;
-#X connect 23 0 22 1;
-#X connect 24 0 23 0;
-#X connect 26 0 25 0;
+#X connect 19 1 18 1;
+#X connect 21 0 20 0;

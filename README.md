@@ -64,6 +64,13 @@ Open "./pd/rev_ctrl.pd" with:
  - JACK MIDI ports: 1 input, no outputs
  - Parameter pairs: 3
 
+## Pd patches (examples and utilities)
+
+There are two folders included, each containing Pure Data patches:
+
+ - pd : Example patches for loading into pd2jack
+ - pd_util : testing utilities for midi data
+
 ## Detailed Info
 ### Audio ports
 
