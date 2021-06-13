@@ -1,3 +1,6 @@
+13_6_2021
+	- MULTI build fails and [pd~] obj fails (with error reference to dynamic library)
+
 11_6_2021
 	- Added Song Position & Song Select
 	- Added MTC

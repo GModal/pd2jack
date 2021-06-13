@@ -1,3 +1,8 @@
+13_6_2021
+More updates to Makefile; single call to "make" will build
+[pd~] not functioning yet
+MIDI ports should be MIDI 1.0 compliant
+
 11_6_2021
 First commit of dev-v0.1.5
 Static libpd lib now built & linked locally.

@@ -156,15 +156,9 @@ Both MIDI **Clock Tick** and MIDI **Time Code** (MTC) messages can be sent & rec
 
 MTC code was tested with the LV2 plugin **Midi Timecode (MTC) Generator**, and fed through to *Ardour*. This hasn't been extensively tested, but it works.
 
-### MIDI Real Time messages
+## MIDI Real Time messages
 
-Some corrections to the Pd "port #" offset are made for RT message. They seem to work (RT entering a port should *appear* on that port).
-
-There's an option to redirect the patch->libpd RT output to the more generic *sendMidiByte()*, rather than as a system RT byte. This option is currently not documented, but is set with a Pd message (more on that, eventually).
-
-## More on MIDI RT messages
-
-What really qualifies as a **Real Time** message in the MIDI protocol? Certainly the five (or six?) single-byte RT codes count as RT. Those **single-byte events** can be sent within a SYSEX data stream, Note On events, etc., and probably (possibly?) won't interrupt the stream. The JACK API supposedly prevents "intertwined" events, but alone it can't fix an ancient protocol (with no handshaking and without packets, for multiple data-sources).
+Some corrections to the Pd "port #" offset are made for RT message, as it's documented that sending RT introduces an unwanted offset.
 
 ### Big Five RT:
  - Timing Clock
@@ -173,13 +167,9 @@ What really qualifies as a **Real Time** message in the MIDI protocol? Certainly
  - Active Sensing
  - System Reset
 
-And the also-ran (could qualify, but doesn't):
-### Honorary RT (#6):
- - Tune Request
-
-Other "status" level message cues (> 127, or any byte with the MS bit set) have significance (MIDI System Common, for instance), but the data portions **must** be sequencial. Beyond the initial "trigger" byte, they aren't really RT events -- and frankly, ***the protocol doesn't include them in RT event category.***
-
 Currently, *pd2jack* only sends the **Big Five** via the **LibPd** *sendSysRealTime()* function. The other messages are transferred with *sendMidiByte()*. It's possible that a hybrid approach could work (send the first byte with *sendSysRealTime()* and the data via *sendMidiByte()* ). There is very little documention on the subject in LibPd.
+
+There's an option to redirect the patch->libpd RT output to the more generic *sendMidiByte()*, rather than as a system RT byte. This option is currently not documented, but is set with a Pd message (more on that, eventually).
 
 ## Passing Parameters
 

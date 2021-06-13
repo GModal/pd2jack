@@ -65,7 +65,7 @@ ifeq ($(PLATFORM), mac)
 endif
 
 $(LIBPDA):
-	cd libpd ; $(MAKE) STATIC=true
+	cd libpd ; $(MAKE) STATIC=true EXTRA=true UTIL=true
 
 clean:
 	rm -f src/*.o

@@ -36,6 +36,8 @@
 using namespace std;
 using namespace pd;
 
+const char versionString[] = "0.1.6";
+
 int sampleRate = 0;
 int ticks = 0;
 int Silence_Print = false;
@@ -863,8 +865,9 @@ int main (int argc, char *argv[]) {
 					}
 				}
 				if (verbose){
-					std::cout << "-Audio: " << AudioIn_TotalPorts << ":" << AudioOut_TotalPorts;
-					std::cout << " Midi: " << MidiIn_TotalPorts << ":" << MidiOut_TotalPorts;
+					std::cout << "Version: " << versionString << endl;
+					std::cout << " -Audio: " << AudioIn_TotalPorts << ":" << AudioOut_TotalPorts;
+					std::cout << " -Midi: " << MidiIn_TotalPorts << ":" << MidiOut_TotalPorts;
 					if (paramCnt) 
 						std::cout << " -Params: " << paramCnt;
 					std::cout << endl;
