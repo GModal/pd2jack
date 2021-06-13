@@ -3,12 +3,13 @@
 
 ...is a shell application for running **Pure Data** patches as minimalist JACK clients, using **LibPd**. I.E., the patches run "headless" and without a GUI. However, parameters can be passed to the patch from the cmd line. See "Passing Parameters" below...
 
-*This is alpha software. **pd2jack** has currently been tested in Linux. It **may** compile and work with Mac & Windows, but that's unknown.*
+Now in beta release, **pd2jack** has currently only been tested on Linux.
 
 ### Features
 
  - Up to 16 audio ports and/or 16 MIDI ports can be opened per instance. Ports are defined at startup with cmd arguments, not by the Pd patch.
  - Parameters can be passed to the Pd patch from the shell (not interactively, currently).
+
 
 Example patch "synths.pd" (shown in the *Claudia* patchbay)
 
@@ -62,6 +63,15 @@ Open "./pd/rev_ctrl.pd" with:
  - JACK Audio ports: 2 inputs, 2 outputs
  - JACK MIDI ports: 1 input, no outputs
  - Parameter pairs: 3
+
+## Pd patches (examples and utilities)
+
+There are two folders with Pd patches included:
+
+ - pd 
+     - Example patches for loading into *pd2jack*.
+ - pd_util
+     - Testing utilities for midi data (to run in a **Pure Data** install, for testing *pd2jack*).
 
 ## Detailed Info
 ### Audio ports
@@ -140,6 +150,27 @@ Basically, **pd2jack** *shouldn't* make conversions on outgoing data (it doesn't
 
 Hey -- it's Pd...(shrug)
 
+### MIDI Timing
+
+Both MIDI **Clock Tick** and MIDI **Time Code** (MTC) messages can be sent & received through *pd2jack*. MIDI clock tick messages have been generated and tested with Pure Data itself as a source, and routed to both *Qtractor* and *Ardour*.
+
+MTC code was tested with the LV2 plugin **Midi Timecode (MTC) Generator**, and fed through to *Ardour*. This hasn't been extensively tested, but it works.
+
+## MIDI Real Time messages
+
+Some corrections to the Pd "port #" offset are made for RT message, as it's documented that sending RT introduces an unwanted offset.
+
+### Big Five RT:
+ - Timing Clock
+ - Start (song)
+ - Stop
+ - Active Sensing
+ - System Reset
+
+Currently, *pd2jack* only sends the **Big Five** via the **LibPd** *sendSysRealTime()* function. The other messages are transferred with *sendMidiByte()*. It's possible that a hybrid approach could work (send the first byte with *sendSysRealTime()* and the data via *sendMidiByte()* ). There is very little documention on the subject in LibPd.
+
+There's an option to redirect the patch->libpd RT output to the more generic *sendMidiByte()*, rather than as a system RT byte. This option is currently not documented, but is set with a Pd message (more on that, eventually).
+
 ## Passing Parameters
 
 Parameters *can* be passed (from the shell) to the Pd patch with this simple technique - a pair of numbers in the format:
@@ -190,33 +221,23 @@ YES, it would be trivial to add **named** send/receive pairs to this application
 
 ## Compiliation and Installation
 
-The *pd2jack* app is built on and requires **LibPd**. A **LibPd** build is dependent on a current **Pure Data** installation (source and build). The **Pure Data** distribution is a subdir in a **LibPd** install -- both can be fetched by recursively cloning the **LibPd** GIT.
+The *pd2jack* app is built on and requires **LibPd**. A **LibPd** build is dependent on a current **Pure Data** installation (source and build). The **Pure Data** distribution is a subdir in a **LibPd** install. **LibPd** and it's dependencies are a submodule of the *pd2jack* GIT.
 
 As of the first "official" release *pd2jack* is currently statically-linked to the **LibPd** Library (libpd.a). This results in a larger executable, but as *LibPd* isn't widely available in a distro package format (deb, rpm, etc), it's the only way to distribute the project without building the dependencies from source (AFAIK, the library isn't pre-compiled for Ubuntu, for instance).
 
 Building from source is a good idea, though. Here's how:
 
-## Build and install LibPd
+## Clone pd2jack
 
-Also follow the compilation instructions for **LibPd**, and install - 
+Create a folder where source and build will reside, then open a console and enter:
 
-    git clone --recurse-submodules https://github.com/libpd/libpd.git
+    git clone --recurse-submodules https://github.com/GModal/pd2jack.git
 
-Then make the build (cd to the "libpd" dir):
-
-    make STATIC=true
-    sudo make install
-
-The **LibPd** libraries and includes are installed in less-commonly used locations, but the **pd2jack** *Makefile* should work with the standard setup. Those locations -
-
-    /usr/local/lib
-    /usr/local/include(/libpd)
-
-If **LibPd** is installed elsewhere, the pd2jack *Makefile* will need changing.
+Cloning the project recursively will also clone the sources of **LibPd** and **Pure Data**.
 
 ## Build and install pd2jack
 
-A simple *Makefile* is included. Open a console in the *pd2jack* install dir, and enter:
+A simple *Makefile* is included. Open a console in the *pd2jack* build folder, and enter:
 
     make
 
@@ -233,4 +254,9 @@ And if it's to be installed system-wide:
 - [Camomile](https://github.com/pierreguillot/Camomile)
 - [libpd](https://github.com/libpd)
 - [Pure Data](https://puredata.info/)
+- The openSUSE DAW: [Geekos DAW](http://geekosdaw.tuxfamily.org/),  [Geekos DAW repository](https://build.opensuse.org/project/show/home:geekositalia:daw)
+
+### Special Thanks To:
+
+ - Fabio, for assistance with the build process.
 

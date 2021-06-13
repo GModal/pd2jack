@@ -6,6 +6,21 @@ using namespace std;
 
 enum midiMessages {
 	// MIDI consts
+	MIDI_STATUS_MASK = 0xF0,
+	
+	// ----------------------------------
+	// Type :
+	// midiGlobal mgType consts
+	MG_VOICE_MIDI = 1,
+	MG_SYSEX_MIDI = 2,
+	MG_REALTIME_MIDI = 3,
+	MG_COMMON_MIDI = 4,
+	
+	// ----------------------------------
+	// Subtype :
+	// ACTUAL MIDI DATA BYTES
+	
+	// MIDI VOICE 
 	NOTE_OFF = 0x80,
 	NOTE_ON	= 0x90,
 	POLY_AFTERTOUCH = 0xA0,
@@ -14,85 +29,78 @@ enum midiMessages {
 	CHANNEL_AFTERTOUCH = 0xD0,
 	PITCH_BEND = 0xE0,
 	
-	MIDI_STATUS_MASK = 0xF0,
-	
+	// MIDI SYSTEM COMMON 
 	SYSEX = 0xF0,
 	SYSEX_END = 0xF7,
+	MTC_QUARTER_FRAME = 0xF1,
 	SONG_POSITION = 0xF2,
 	SONG_SELECT = 0xF3,
 	TUNE_REQUEST = 0xF6,
-	TIMING_TICK = 0xF8,
+	
+	// MIDI REAL-TIME
+	CLOCK_TICK = 0xF8,
 	START_SONG = 0xFA,
 	CONTINUE_SONG = 0xFB,
 	STOP_SONG = 0xFC,
 	ACTIVE_SENSING = 0xFE,
 	SYSTEM_RESET = 0xFF,
 	
-	// SYSEX consts
-	
-	// realtime
-	REALTIME_FALSE = 0,
+	// --------------------------------------
+	// Extra:
+	// realtime (total # of bytes)
 	REALTIME_1 = 1,
 	REALTIME_2 = 2,
 	REALTIME_3 = 3,
+	CAPTURE_MAX = 10000000,
 	
-	// status
-	SYSEX_FREE = 0,
-	SYSEX_IN_PROGRESS = 1, 
-	SYSEX_DONE = 2,
-	SYSEX_KILL = 3,
-	SYSEX_PREKILL =4,
-	SYSEX_GARBAGE = 5,
+	// Status consts	
+	MSG_FREE = 0,
+	MSG_IN_PROGRESS = 1, 
+	MSG_DONE = 2,
+	MSG_KILL = 3,
 	
+	// --------------------------------------
 	// port values
-	SYSEX_NO_PORT_INDEX = -1
+	NO_PORT_INDEX = -1,
+	
+	// --------------------------------------
+	// RT send schema
+	RTSEND_NOOP = 0,
+	RTSEND_SYSRT = 1,	
+	RTSEND_PLAIN = 2,
 };
 
+// ints
 class iP2j {
-	// ints
 	public:
-	int A;
-	int B;
-	int C;
+	int data[4] = {0,0,0,0};
 	
 	iP2j(void) {
-		A = 0;
-		B = 0;
-		C = 0;
 	}	
 };
 
-class midiMsgP2J {
+// Replaced other MIDI classes (three) with one
+class midiGlobal {
+public:
 	public:
-	unsigned char type;
-	int port;
-	int size;
-	int realtime;
-	void * bufferPtr;
-	unsigned char data[3];
+	unsigned char mgType;
+	int mgSubtype;
+	unsigned char mgSubExtra;
 	
-	midiMsgP2J(void) {
-	type = 0;
-	size = 0;
-	realtime = REALTIME_FALSE;
-	port = SYSEX_NO_PORT_INDEX;
-	bufferPtr = nullptr;
+	void * mgBufferPtr;
+	int mgPort;
+	int mgStatus;
+	int mgSize;
+	int mgCaptureCount;
+	std::vector<unsigned char> mgDataV;
+	
+	midiGlobal(void) {
+		mgBufferPtr = nullptr;
+		mgPort = NO_PORT_INDEX;
+		mgStatus = 0;
+		mgType = 0;
+		mgSize = 0;
+		mgType = 0;
+		mgCaptureCount = CAPTURE_MAX;
 	}
 };
-
-class midiSysexP2J {
-	public:
-	void * bufferPtr;
-	int port;
-	int status;
-	int sysexSize;
-	std::vector<unsigned char> dataV;
-
-	midiSysexP2J(void) {
-		port = SYSEX_NO_PORT_INDEX;
-		sysexSize = 0;
-		status = SYSEX_FREE;
-		bufferPtr = nullptr;
-	}
-};
-

@@ -1,3 +1,26 @@
+13_6_2021
+More updates to Makefile; single call to "make" will build
+[pd~] not functioning yet
+MIDI ports should be MIDI 1.0 compliant
+
+11_6_2021
+First commit of dev-v0.1.5
+Static libpd lib now built & linked locally.
+Added "libpd" submodule to GIT.
+Changed Makefile, lib path now relative. Build still static.
+MTC, midi clock tick, Song Position, Song Select all working.
+
+6_6_2021
+v0.1.3 Branch
+Virtually a complete rewrite of the JACK MIDI code
+- One general midi class, vs. three previously
+- much more streamlined
+Added debug option to Makefile (DEBUG=true)
+
+3_6_2021
+v0.1.0
+First official release
+
 27_5_2021
 - Makefile now links LibPd library statically
 - Change "help->Midi port->default" msg to "- default 1:1"

@@ -1,0 +1,60 @@
+#N canvas 1095 418 469 245 12;
+#N canvas 653 277 1050 439 transport 0;
+#X obj 530 375 midiout;
+#X msg 504 112 250;
+#X msg 552 227 252;
+#X msg 530 167 251;
+#X text 644 170 song position pointer START, f 15;
+#X msg 647 240 242 0 0;
+#X obj 221 29 bng 45 100 50 0 \$0-startB empty Start 8 20 0 12 -3138
+-1 -262144;
+#X obj 293 29 bng 45 100 50 0 \$0-stopB empty Stop 11 20 0 12 -229441
+-1 -262144;
+#X obj 364 29 bng 45 100 50 0 \$0-contB empty Cont 11 20 0 12 -256717
+-1 -262144;
+#X obj 167 36 bng 35 100 50 0 \$0-rewindB empty < 4 16 0 48 -162280
+-1 -262144;
+#X msg 436 225 1;
+#X msg 458 259 0;
+#X obj 186 97 tgl 24 0 empty \$0-TClkSw Running -4 -6 0 10 -262144
+-1 -1 0 1;
+#X obj 186 153 metro 200;
+#X msg 186 185 248;
+#X obj 226 102 hsl 128 15 14 40 0 0 empty \$0-clkSpeed <--_fast_SPEED_slow_-->
+-4 -8 0 12 -262144 -1 -1 3341 0;
+#X floatatom 362 99 5 0 0 0 - - -;
+#X obj 29 148 inlet;
+#X obj 504 82 r \$0-startB;
+#X obj 552 201 r \$0-stopB;
+#X obj 530 141 r \$0-contB;
+#X obj 647 210 r \$0-rewindB;
+#X obj 29 250 s \$0-clkSpeed;
+#X obj 61 187 loadbang;
+#X msg 61 213 20.84;
+#X obj 436 289 s \$0-TClkSw;
+#X text 219 185 Send the Ticks;
+#X msg 613 333 1;
+#X connect 1 0 0 0;
+#X connect 2 0 0 0;
+#X connect 3 0 0 0;
+#X connect 5 0 0 0;
+#X connect 10 0 25 0;
+#X connect 11 0 25 0;
+#X connect 12 0 13 0;
+#X connect 13 0 14 0;
+#X connect 14 0 0 0;
+#X connect 15 0 16 0;
+#X connect 15 0 13 1;
+#X connect 17 0 22 0;
+#X connect 18 0 1 0;
+#X connect 18 0 10 0;
+#X connect 19 0 2 0;
+#X connect 19 0 11 0;
+#X connect 20 0 3 0;
+#X connect 20 0 10 0;
+#X connect 21 0 5 0;
+#X connect 23 0 24 0;
+#X connect 24 0 22 0;
+#X connect 27 0 0 1;
+#X coords 0 -1 1 1 285 120 2 150 10;
+#X restore 41 36 pd transport;

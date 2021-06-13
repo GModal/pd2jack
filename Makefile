@@ -1,11 +1,16 @@
-# 
+#  Original Makefile for libpd by:
 # copyright (c) 2014 rafael vega <rvega@elsoftwarehamuerto.org>
 # 
 # bsd simplified license.
 # for information on usage and redistribution, and for a disclaimer of all
 # warranties, see the file, "license.txt," in this distribution.
-# 
-# see https://github.com/libpd/libpd for documentation
+#     see https://github.com/libpd/libpd for documentation
+#
+# for "pd2jack"
+#   by Doug Garmon
+#
+# The Mac & Windows conditionals & compilation will almost certainly NOT work -- sorry. 
+#     But they included as a starting point...
 #
 
 # detect platform, move libpd dylib to local folder on mac
@@ -26,10 +31,12 @@ else
     AUDIO_API = -lole32 -loleaut32 -ldsound -lwinmm
   else  # assume Linux
     SOLIB_EXT = so
-    ALIB_EXT = a
+    alib_ext = a
     PLATFORM = linux
+    prefix = /usr
+    exec_prefix = $(prefix)
+    bindir = $(exec_prefix)/bin
     CFLAGS = -D__UNIX_JACK__ -D__LINUX_ALSA__
-    EXEDIR = /usr/bin
     AUDIO_API = -ljack -lasound -lpthread -lm -ldl
   endif
 endif
@@ -40,23 +47,25 @@ else
 	CXXFLAGS = $(CFLAGS)
 endif
 
-LIBPD_DIR = /usr/local
-LIBPD = $(LIBPD_DIR)/lib/libpd.$(SOLIB_EXT)
-LIBPDA = $(LIBPD_DIR)/lib/libpd.$(ALIB_EXT)
+LIBPD_DIR = ./libpd
+LIBPDA = $(LIBPD_DIR)/libs/libpd.$(alib_ext)
 
 SRC_FILES = src/PdObject.cpp src/main.cpp src/pd2jack.hpp
 TARGET = pd2jack
 
-CXXFLAGS += -I$(LIBPD_DIR)/include/libpd/util -I$(LIBPD_DIR)/include/libpd -Wl,–export-dynamic \
+CXXFLAGS += -I$(LIBPD_DIR)/cpp -I$(LIBPD_DIR)/libpd_wrapper -I$(LIBPD_DIR)/libpd_wrapper/util -Wl,–export-dynamic \
            -I./src -std=c++11 -DLIBPD_USE_STD_MUTEX -O3
 
 .PHONY: clean clobber
 
-$(TARGET): ${SRC_FILES:.cpp=.o} $(LIBPDA)
+$(TARGET): ${SRC_FILES:.cpp=.o} $(LIBPDA) 
 	g++ -o $(TARGET) $^ -L.$(LIBPDA) $(AUDIO_API)
 ifeq ($(PLATFORM), mac)
 	mkdir -p ./libs && cp $(LIBPD) ./libs
 endif
+
+$(LIBPDA):
+	cd libpd ; $(MAKE) STATIC=true EXTRA=true UTIL=true
 
 clean:
 	rm -f src/*.o
@@ -69,7 +78,8 @@ endif
 	cd $(LIBPD_DIR) && make clobber
 
 install:
-	install -m 755 $(TARGET) $(EXEDIR)
+	install -m 755 $(TARGET) $(bindir)
 
 uninstall:
 	rm -f $(EXEDIR)/$(TARGET)
+	

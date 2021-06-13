@@ -1,4 +1,4 @@
-#N canvas 616 387 896 464 10;
+#N canvas 368 242 1131 464 10;
 #X obj 66 48 notein;
 #X obj 66 83 noteout;
 #X obj 138 48 ctlin;
@@ -13,11 +13,20 @@
 #X obj 446 73 pgmout;
 #X obj 210 74 - 8192;
 #X text 216 129 ^ Read bendin / bendout help;
-#X obj 295 224 sysexin;
-#X obj 295 257 midiout;
-#X obj 368 223 midirealtimein;
-#X obj 368 257 midiout;
-#X obj 404 300 print Pd RT:;
+#X obj 256 284 sysexin;
+#X obj 256 335 midiout;
+#X obj 329 283 midirealtimein;
+#X obj 329 340 midiout;
+#X obj 183 334 midiout;
+#X obj 183 284 midiin;
+#X obj 586 323 s P2J;
+#X msg 586 293 RTschema 2;
+#X text 583 346 Set RT schema to "send as plain byte";
+#X text 682 290 <---;
+#X text 680 228 Bang this in the pd2jack internal patch \, and RT will
+be sent as plain bytes. You probably DON'T want to do this \, but it's
+the beginning of a framework of setting parameters via Pd messages...
+;
 #X connect 0 0 1 0;
 #X connect 0 1 1 1;
 #X connect 0 2 1 2;
@@ -37,5 +46,7 @@
 #X connect 14 0 15 0;
 #X connect 14 1 15 1;
 #X connect 16 0 17 0;
-#X connect 16 0 18 0;
 #X connect 16 1 17 1;
+#X connect 19 0 18 0;
+#X connect 19 1 18 1;
+#X connect 21 0 20 0;

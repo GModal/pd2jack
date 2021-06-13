@@ -9,6 +9,7 @@
 // "pd2jack"
 // https://github.com/GModal/pd2jack
 //  	by Doug Garmon
+// v0.1.6 working
 
 #include <stdio.h>
 #include <errno.h>
@@ -17,6 +18,7 @@
 #include <queue>
 #include <memory>
 #include <iostream> 
+#include <iomanip>
 #include <sstream>
 #include <unistd.h>
 #include <stdlib.h>
@@ -32,16 +34,16 @@
 #include "pd2jack.hpp"
 
 using namespace std;
+using namespace pd;
+
+const char versionString[] = "0.1.6";
 
 int sampleRate = 0;
 int ticks = 0;
 int Silence_Print = false;
-iP2j APcount, MPcount;
 
-vector<midiMsgP2J> msgOutV;
-
-vector<midiSysexP2J> sysexPorts;
-vector<midiSysexP2J> sysexOutV;
+vector<midiGlobal> mgReady;
+vector<midiGlobal> mgInProgress;
 
 jack_client_t *client = nullptr;
 
@@ -69,6 +71,7 @@ void * midi_inputBuffer;
 
 int midiChannel;
 int pdMidiChannel;
+int RTsendSchema = RTSEND_SYSRT;
 
 // ========================
 // = JACK AUDIO CALLBACKS =
@@ -81,7 +84,7 @@ int process(jack_nframes_t nframes, void *arg) {
 	jack_nframes_t event_count = 0;
 	//jack_nframes_t event_index = 0;
 	jack_midi_event_t in_event;
-	unsigned int oPort, realMidiChannel;
+	unsigned int oPort;
 
 	// -------------------------------------------------------------------------------------
 	// ------------------------- Audio ----------------------------------------------------
@@ -114,49 +117,57 @@ int process(jack_nframes_t nframes, void *arg) {
   
     for( jack_nframes_t port = 0 ; port < MidiIn_TotalPorts ; ++port )
     {
+    	int genEvent;
+    	bool stillValid = true;
+    	
 	midi_inputBuffer = jack_port_get_buffer( midi_inPorts[port], nframes );	
 	event_count = jack_midi_get_event_count( midi_inputBuffer );
 			
 		for(int i=0; i<event_count; i++) {
 			jack_midi_event_get(&in_event, midi_inputBuffer, i);
-			midiChannel = (int)(in_event.buffer[0] & 0x0F);		// the original chan #
+			
+			genEvent = in_event.buffer[0];					// the first (event) byte
+			midiChannel = genEvent & 0x0F;					// the original chan #
 			pdMidiChannel = midiChannel + (16 * port);			// Pd chan & port	
 			
 			// a SYSEX event
-			if (in_event.buffer[0] == SYSEX) {
+			if (genEvent== SYSEX) {
 				
 				for (int evCount = 0; evCount < in_event.size; evCount++) {
 					unsigned char sysex_byte = in_event.buffer[evCount];
 					lpd.sendSysex(port, sysex_byte);
 					}
+				stillValid = false;
 			} 
 			
-			else if (int genEvent = in_event.buffer[0] & MIDI_STATUS_MASK) {
+			if ( stillValid) {
 				// general event -- note on controllers, etc.
-				switch (genEvent) {
+				stillValid = false;
+				
+				switch (genEvent & MIDI_STATUS_MASK) {
 			
 					case NOTE_OFF :
-					lpd.sendNoteOn(pdMidiChannel, (long)in_event.buffer[1], 0);
+					lpd.sendNoteOn(pdMidiChannel, (unsigned char)in_event.buffer[1], 0);
 					break;
 						
 					case NOTE_ON :
-					lpd.sendNoteOn(pdMidiChannel, (long)in_event.buffer[1], (long)in_event.buffer[2]);
+					lpd.sendNoteOn(pdMidiChannel, (unsigned char)in_event.buffer[1], (unsigned char)in_event.buffer[2]);
 					break;
 					
 					case POLY_AFTERTOUCH :
-					lpd.sendPolyAftertouch(pdMidiChannel, (long)in_event.buffer[1], (long)in_event.buffer[2]);
+					lpd.sendPolyAftertouch(pdMidiChannel, (unsigned char)in_event.buffer[1], (unsigned char)in_event.buffer[2]);
 					break;
 						
 					case CONT_CTRL :
-					lpd.sendControlChange(pdMidiChannel, (long)in_event.buffer[1], (long)in_event.buffer[2]);
+					lpd.sendControlChange(pdMidiChannel, (unsigned char)in_event.buffer[1], (unsigned char)in_event.buffer[2]);
 					break;
 						
 					case PROGRAM_CHANGE :
-					lpd.sendProgramChange(pdMidiChannel, (long)in_event.buffer[1]);
+					lpd.sendProgramChange(pdMidiChannel, (unsigned char)in_event.buffer[1]);
 					break;
 					
 					case CHANNEL_AFTERTOUCH :
-					lpd.sendAftertouch(pdMidiChannel, (long)in_event.buffer[1]);
+					lpd.sendAftertouch(pdMidiChannel, (unsigned char)in_event.buffer[1]);
 					break;
 						
 					case PITCH_BEND :
@@ -167,97 +178,100 @@ int process(jack_nframes_t nframes, void *arg) {
 					}
 					break;	
 					
-					case SONG_SELECT :
-					// RT two bytes
-					lpd.sendSysRealTime(port, (long)in_event.buffer[0]);
-					lpd.sendSysRealTime(port, (long)in_event.buffer[1]);
+					default:
+					stillValid = true;
 					break;
-					
-					case SONG_POSITION :
-					// RT three bytes				
-					for (int h = 0; h < 3; h++)
-						lpd.sendSysRealTime(port, (long)in_event.buffer[h]);
-					break;
-					
-					// The rest...
+				}
+			}
+			if ( stillValid) {
+				switch (genEvent) {
 					// RT one byte
+					
+					// technically a system common msg, so don't send as RT
 					case TUNE_REQUEST :
-					case TIMING_TICK :
+						
+					lpd.sendMidiByte(port, (unsigned char)in_event.buffer[0]);
+					break;
+					
+					// system real-time
+					case CLOCK_TICK :
 					case START_SONG :
 					case CONTINUE_SONG :
 					case STOP_SONG :
 					case ACTIVE_SENSING :
 					case SYSTEM_RESET :
+					
+					// Optional: send all single status bytes as "regular" bytes. Probably not really useful...
+					switch (RTsendSchema) {
+						// send as a regular byte
+						case RTSEND_PLAIN:
+						lpd.sendMidiByte(port, (unsigned char)in_event.buffer[0]);
+						break;
 						
-					lpd.sendSysRealTime(port, (long)in_event.buffer[0]);
-					break;	
+						// send as RT (default)
+						// add 1 to port# with sendSysRealTime()
+						default:
+						lpd.sendSysRealTime(port + 1, (unsigned char)in_event.buffer[0]);
+						break;
+					}
+					break;
+					
+					//These are not RT, so send as regular bytes
+					case MTC_QUARTER_FRAME :
+					case SONG_SELECT :
+					
+					// (not) RT two bytes
+					lpd.sendMidiByte(port, (unsigned char)in_event.buffer[0]);
+					lpd.sendMidiByte(port, (unsigned char)in_event.buffer[1]);
+					break;
+					
+					case SONG_POSITION :
+					// (not) RT three bytes				
+					for (int h = 0; h < 3; h++)
+						lpd.sendMidiByte(port, (unsigned char)in_event.buffer[h]);
+					break;
 				}
 			}
 		}
 	} 
-	// ------------------------------------------------------------------------------------------------------------------
-	// --------------------JACK "general" Midi Output (notes, bend, controllers, etc) --------------------
-	//        - - - - - - - Output previously QUEUED midi data, from Pd to JACK output ports - - - - - - 
-
-	// MUST clear the last midi output buffer, delete that event
-	for (int j = msgOutV.size() - 1; j >= 0; j--) {	
-		if (msgOutV[j].bufferPtr != nullptr) {			
-			jack_midi_clear_buffer(msgOutV[j].bufferPtr);
-			msgOutV.erase(msgOutV.begin() + j);
-		}
-	}
-	int vsz = msgOutV.size();
-	for (int vIndex = 0; vIndex < vsz; vIndex++) {	
-		oPort = msgOutV[vIndex].port;
-		realMidiChannel = msgOutV[vIndex].data[0] - oPort * 16;
+	//---------------------------------------------------------------------------------------------------------------------------
+	// 		The general output routine: libpd -> JACK out 
+	//
+	// MUST clear the last MIDI output buffer from the previous event, then delete that event obj from the Ready Q
+	for (int qC = mgReady.size() - 1; qC >= 0; qC--) {
 		
-		if (oPort < MidiOut_TotalPorts) {
-			msgOutV[vIndex].bufferPtr = jack_port_get_buffer( midi_outPorts[oPort], nframes );	
- 			unsigned char * eventBuffer = jack_midi_event_reserve( msgOutV[vIndex].bufferPtr, 0, msgOutV[vIndex].size);
- 			
- 			// NOT a realtime event (a note, CC, etc)
- 			if (msgOutV[vIndex].realtime == REALTIME_FALSE) {
-				eventBuffer[0] = msgOutV[vIndex].type + realMidiChannel;
-				eventBuffer[1] = msgOutV[vIndex].data[1];
-				if (msgOutV[vIndex].size > 2)
-					eventBuffer[2] = msgOutV[vIndex].data[2];
-			} 
-			// IS a realtime event
-			else {
-				//cout << "RT Pt:"  << oPort << endl;
-				eventBuffer[0] = msgOutV[vIndex].type;
-				if (msgOutV[vIndex].realtime == REALTIME_2)
-					eventBuffer[1] = msgOutV[vIndex].data[1];
-			}	
-		}
-	}
-	//------------------------------------------------------------------------------------------------ SYSEX -------------------
-	// MUST clear the last SYSEX output buffer, delete that event
-	
-	for (int j = sysexOutV.size() - 1; j >= 0; j--) {
-		
-		if (sysexOutV[ j ].bufferPtr != nullptr) {		
-			jack_midi_clear_buffer(sysexOutV[ j ].bufferPtr);
-				if (sysexOutV[j].status == SYSEX_KILL) {
-					sysexOutV.erase(sysexOutV.begin() + j);
+		if (mgReady[ qC ].mgBufferPtr != nullptr) {		
+			jack_midi_clear_buffer(mgReady[ qC ].mgBufferPtr);
+				if (mgReady[qC].mgStatus == MSG_KILL) {
+					mgReady.erase(mgReady.begin() + qC );
 			} 
 		}
 	}
 
-	for (int vIndex = 0; vIndex < sysexOutV.size(); vIndex++) {
-		oPort = sysexOutV[vIndex].port;
+	// cycle through the events in the MIDI "Ready" queue
+	// Now much simplified
+	for (int vIndex = 0; vIndex < mgReady.size(); vIndex++) {
+		oPort = mgReady[vIndex].mgPort;
 		
 		if (oPort < MidiOut_TotalPorts && oPort >= 0) {
-			if (sysexOutV[vIndex].status == SYSEX_DONE) {
-				sysexOutV[vIndex].bufferPtr =  (unsigned char *)jack_port_get_buffer( midi_outPorts[oPort], nframes );	
-				unsigned char * sysexBuffer = jack_midi_event_reserve( sysexOutV[vIndex].bufferPtr, 0, sysexOutV[vIndex].dataV.size() );
 			
-				for (int h = 0; h < sysexOutV[vIndex].dataV.size(); h++)
-				{
-					sysexBuffer[h] = sysexOutV[vIndex].dataV[h];
-				}
-				sysexOutV[vIndex].status = SYSEX_KILL;
+			int mType = mgReady[vIndex].mgType;
+			mgReady[vIndex].mgBufferPtr =  (unsigned char *)jack_port_get_buffer( midi_outPorts[oPort], nframes );
+			unsigned char * mglobalBuffer = jack_midi_event_reserve( mgReady[vIndex].mgBufferPtr, 0, mgReady[vIndex].mgDataV.size() );
+			
+			// first byte special case for Voice midi
+			if (mType == MG_VOICE_MIDI) {
+				unsigned int realMidiChannel = mgReady[vIndex].mgDataV[0]- oPort * 16;
+				mglobalBuffer[0] = mgReady[vIndex].mgSubtype + realMidiChannel;
 			}
+			else 
+				mglobalBuffer[0] = mgReady[vIndex].mgDataV[0];
+
+			for (int h = 1; h < mgReady[vIndex].mgDataV.size(); h++)
+			{
+				mglobalBuffer[h] = mgReady[vIndex].mgDataV[h];
+			}
+			mgReady[vIndex].mgStatus = MSG_KILL;
 		}
 	}
 return 0;
@@ -268,11 +282,11 @@ return 0;
 //	- - -  return port index if true, -1 if false
 
 int findObjByPort( int port) {
-int portIndex = SYSEX_NO_PORT_INDEX;
+int portIndex = NO_PORT_INDEX;
 	
-	for(int i = 0; i < sysexPorts.size(); i++)
+	for(int i = 0; i < mgInProgress.size(); i++)
 	{
-		if (sysexPorts[i].port == port)
+		if (mgInProgress[i].mgPort == port)
 			portIndex = i;
 	}
   return portIndex;
@@ -285,202 +299,252 @@ void PdObject::print(const std::string& message) {
 	if (!Silence_Print)
 		cout << message << endl;
 }
+
+void PdObject::receiveFloat(const std::string& dest, float num) {
+	cout << "P2J: float " << dest << ": " << num << endl;
+}
+
+void PdObject::receiveMessage(const std::string& dest, const std::string& msg, const List& list) {
+	int lsft = 0;
+	std::string RTSchStr = "RTschema";
+	
+	// Message: "RTschema"--
+	//		format: "P2J RTschema <#>"
+	if (msg == RTSchStr) {
+		if (list.len() == 1) 
+			if(list.isFloat(0)) {
+				lsft = list.getFloat(0);
+					   
+				if ( lsft) {
+				RTsendSchema = lsft;
+				}
+			}
+	}
+}
+
 // -----------------------------------------------------------------------------------------
 // LibPd MIDI callbacks
 //
-//  - - - - - - - -  MIDI data sent FROM the patch -> prepare this TO BE OUTPUT via JACK - - - - - - - - -
-//	Note, etc., data could be output directly, but longer msg are single byte, so must be queued
+//  - - - - - - - -  MIDI data sent FROM the patch -> prepare this TO BE OUTPUT via JACK 
+//
+// 	All MIDI VOICE messages arrive complete (from LibPd objs), so can be pushed directly into "ready" Q
 
 void PdObject::receiveNoteOn(const int channel, const int pitch, const int velocity) {
-	midiMsgP2J iMsg;
+	midiGlobal mgMsg;
 
-	iMsg.type = NOTE_ON;
-	iMsg.port = (int) channel / 16;
-	iMsg.size = 3;
-	iMsg.realtime = REALTIME_FALSE;
-	iMsg.data[0] = (unsigned char)channel;
-	iMsg.data[1] = (unsigned char)pitch;
-	iMsg.data[2] = (unsigned char)velocity;
-	msgOutV.push_back(iMsg);
+	mgMsg.mgType = MG_VOICE_MIDI;
+	mgMsg.mgSubtype = NOTE_ON;
+	mgMsg.mgPort = (int) channel / 16;
+	mgMsg.mgSize = 3;
+
+	mgMsg.mgDataV.push_back((unsigned char)channel);
+	mgMsg.mgDataV.push_back((unsigned char)pitch);
+	mgMsg.mgDataV.push_back((unsigned char)velocity);
+	mgReady.push_back(mgMsg);
 }
 
 void PdObject::receiveControlChange(const int channel, const int controller, const int value) {
-	midiMsgP2J iMsg;
+	midiGlobal mgMsg;
 
-	iMsg.type = CONT_CTRL;
-	iMsg.port = (int) channel / 16;
-	iMsg.size = 3;
-	iMsg.realtime = REALTIME_FALSE;
-	iMsg.data[0] = (unsigned char)channel;
-	iMsg.data[1] = (unsigned char)controller;
-	iMsg.data[2] = (unsigned char)value;
-	msgOutV.push_back(iMsg);
+	mgMsg.mgType = MG_VOICE_MIDI;
+	mgMsg.mgSubtype = CONT_CTRL;
+	mgMsg.mgPort = (int) channel / 16;
+	mgMsg.mgSize = 3;
+
+	mgMsg.mgDataV.push_back((unsigned char)channel);
+	mgMsg.mgDataV.push_back((unsigned char)controller);
+	mgMsg.mgDataV.push_back((unsigned char)value);
+	mgReady.push_back(mgMsg);
 }
 
 void PdObject::receiveProgramChange(const int channel, const int value) {
-	midiMsgP2J iMsg;
+	midiGlobal mgMsg;
 
-	iMsg.type = PROGRAM_CHANGE;
-	iMsg.port = (int) channel / 16;
-	iMsg.size = 2;
-	iMsg.realtime = REALTIME_FALSE;
-	iMsg.data[0] = (unsigned char)channel;
-	iMsg.data[1] = (unsigned char)value;
-	msgOutV.push_back(iMsg);
+	mgMsg.mgType = MG_VOICE_MIDI;
+	mgMsg.mgSubtype = PROGRAM_CHANGE;
+	mgMsg.mgPort = (int) channel / 16;
+	mgMsg.mgSize = 2;
+
+	mgMsg.mgDataV.push_back((unsigned char)channel);
+	mgMsg.mgDataV.push_back((unsigned char)value);
+	mgReady.push_back(mgMsg);
 }
 
 void PdObject::receivePitchBend(const int channel, const int value) {
-	midiMsgP2J iMsg;
+	midiGlobal mgMsg;
 	unsigned int pbValue = value + 8192;
-
-	iMsg.type = PITCH_BEND;
-	iMsg.port = (int) channel / 16;
-	iMsg.size = 3;
-	iMsg.realtime = REALTIME_FALSE;
-	iMsg.data[0] = (unsigned char)channel;
-	iMsg.data[1] = (unsigned char)(pbValue & 0x007F);
-	iMsg.data[2] = (unsigned char)((pbValue) >> 7) & 0x007F;
-	msgOutV.push_back(iMsg);
+	
+	mgMsg.mgType = MG_VOICE_MIDI;
+	mgMsg.mgSubtype = PITCH_BEND;
+	mgMsg.mgPort = (int) channel / 16;
+	mgMsg.mgSize = 3;
+	
+	mgMsg.mgDataV.push_back((unsigned char)channel);
+	mgMsg.mgDataV.push_back((unsigned char)pbValue & 0x007F);
+	mgMsg.mgDataV.push_back((unsigned char)((pbValue) >> 7) & 0x007F);
+	mgReady.push_back(mgMsg);
 }
 
 void PdObject::receiveAftertouch(const int channel, const int value) {
-	midiMsgP2J iMsg;
+	midiGlobal mgMsg;
 
-	iMsg.type = CHANNEL_AFTERTOUCH;
-	iMsg.port = (int) channel / 16;
-	iMsg.size = 2;
-	iMsg.realtime = REALTIME_FALSE;
-	iMsg.data[0] = (unsigned char)channel;
-	iMsg.data[1] = (unsigned char)value;
-	msgOutV.push_back(iMsg);
+	mgMsg.mgType = MG_VOICE_MIDI;
+	mgMsg.mgSubtype = CHANNEL_AFTERTOUCH;
+	mgMsg.mgPort = (int) channel / 16;
+	mgMsg.mgSize = 2;
+
+	mgMsg.mgDataV.push_back((unsigned char)channel);
+	mgMsg.mgDataV.push_back((unsigned char)value);
+	mgReady.push_back(mgMsg);
 }
 
 void PdObject::receivePolyAftertouch(const int channel, const int pitch, const int value) {
-	midiMsgP2J iMsg;
+	midiGlobal mgMsg;
 
-	iMsg.type = POLY_AFTERTOUCH;
-	iMsg.port = (int) channel / 16;
-	iMsg.size = 3;
-	iMsg.realtime = REALTIME_FALSE;
-	iMsg.data[0] = (unsigned char)channel;
-	iMsg.data[1] = (unsigned char)pitch;
-	iMsg.data[2] = (unsigned char)value;
-	msgOutV.push_back(iMsg);
+	mgMsg.mgType = MG_VOICE_MIDI;
+	mgMsg.mgSubtype = POLY_AFTERTOUCH;
+	mgMsg.mgPort = (int) channel / 16;
+	mgMsg.mgSize = 3;
+
+	mgMsg.mgDataV.push_back((unsigned char)channel);
+	mgMsg.mgDataV.push_back((unsigned char)pitch);
+	mgMsg.mgDataV.push_back((unsigned char)value);
+	mgReady.push_back(mgMsg);
 }
+// ------------------------------------------------------------------------------------------------------------------------------------------
+// 	Internal Pd patch [midiout] output -> libpd out
+// SYSEX, RT and COMMON messages are byte streams, so must be queued "in progress" then flagging as ready when complete
 
 void PdObject::receiveMidiByte(const int port, const int byte) {
 int portIndex;
-midiMsgP2J iMsg;
-midiSysexP2J mSysex;
+
+midiGlobal mgMsg;
 unsigned char ucByte;
 bool byte_OK = true;
 
 	ucByte = (unsigned char)(byte);
 	portIndex = findObjByPort(port);
-
-		if (portIndex != SYSEX_NO_PORT_INDEX) {
-			if (sysexPorts[portIndex].status == SYSEX_IN_PROGRESS ) {
-				if (ucByte >= 128 && ucByte != SYSEX_END) {
-					byte_OK = false;
-				}
-			}
-		}
-
-		if (byte_OK) {
-		
-			switch (ucByte) {
-		
-				case TUNE_REQUEST :
-				case TIMING_TICK :
-				case START_SONG :
-				case CONTINUE_SONG :
-				case STOP_SONG :
-				case ACTIVE_SENSING :
-				case SYSTEM_RESET :
-				
-				iMsg.type = ucByte;
-				iMsg.size = REALTIME_1;
-				iMsg.port = port;
-				//iMsg.realtime = REALTIME_1;
-				iMsg.data[0] = ucByte;
-				msgOutV.push_back(iMsg);
-				break;
-				
-				case SONG_SELECT :
-				// two bytes
-				break;
-				
-				case SONG_POSITION :
-				// three bytes				
-				break;
-		
-				// * * * * * * * * * * * * * * NEW sysex msg
-				case SYSEX :
-				
-				// should NOT be a existing sysex msg on this port, kill the old one
-				if (portIndex != SYSEX_NO_PORT_INDEX) {
-					if (sysexPorts[portIndex].status == SYSEX_IN_PROGRESS) {
-						sysexPorts.erase(sysexPorts.begin() + portIndex);
-					}
-				}
-				mSysex.dataV.clear();
-				mSysex.status = SYSEX_IN_PROGRESS;
-				mSysex.port = port;
-		
-				//mSysex.sysexSize = 1;
-				mSysex.dataV.push_back(ucByte);
-				mSysex.bufferPtr = nullptr;
-				// add to vector
-				sysexPorts.push_back(mSysex);
 	
-				break;
-				
-				//  * * * * * * * * * * * * * * END of sysex msg
-				
-				case SYSEX_END :
-				if (portIndex != SYSEX_NO_PORT_INDEX) {
-					if (sysexPorts[portIndex].status == SYSEX_IN_PROGRESS) {
-						//sysexPorts[portIndex].sysexSize++;
-						sysexPorts[portIndex].dataV.push_back(ucByte);
-						sysexPorts[portIndex].status = SYSEX_DONE;
-					}
-				}
-	
-				break;
-		
-				// * * * * * * * * * * * * * * * CONTINUE (FILL) the sysex msg
+	if (byte_OK) {
+		switch (ucByte) {
 			
-				default:
-				if (ucByte < 128) {
-					if (portIndex != SYSEX_NO_PORT_INDEX) {
-						if (sysexPorts[portIndex].status == SYSEX_IN_PROGRESS ) {
-								//sysexPorts[portIndex].sysexSize++;
-								sysexPorts[portIndex].dataV.push_back(ucByte);
-						}
+			// two bytes RT --------------------------------------------
+			case SONG_SELECT :
+			case MTC_QUARTER_FRAME :
+				
+			mgMsg.mgType = MG_REALTIME_MIDI;
+			mgMsg.mgStatus = MSG_IN_PROGRESS;
+			mgMsg.mgPort = port;
+			mgMsg.mgSize = REALTIME_2;
+			mgMsg.mgCaptureCount = REALTIME_2 - 1;
+
+			mgMsg.mgDataV.push_back( ucByte);
+			// add to vector
+			mgInProgress.push_back(mgMsg);
+			break;
+			
+			// two bytes RT --------------------------------------------
+			case SONG_POSITION :
+			
+			mgMsg.mgType = MG_REALTIME_MIDI;
+			mgMsg.mgStatus = MSG_IN_PROGRESS;
+			mgMsg.mgPort = port;
+			mgMsg.mgSize = REALTIME_3;
+			mgMsg.mgCaptureCount = REALTIME_3 - 1;
+
+			mgMsg.mgDataV.push_back( ucByte);
+			// add to vector
+			mgInProgress.push_back(mgMsg);
+			break;
+	
+			// Single-byte RT events ------------------------------
+			case TUNE_REQUEST :
+			case CLOCK_TICK :
+			case START_SONG :
+			case CONTINUE_SONG :
+			case STOP_SONG :
+			case ACTIVE_SENSING :
+			case SYSTEM_RESET :
+				
+			mgMsg.mgType = MG_REALTIME_MIDI;
+			mgMsg.mgStatus = MSG_DONE;
+			mgMsg.mgPort = port;
+			mgMsg.mgSize = REALTIME_1;
+
+			mgMsg.mgDataV.push_back( ucByte);
+			// add to vector
+			mgReady.push_back(mgMsg);
+			break;
+	
+			// * * * * * * * * * * * * * * NEW sysex msg
+			case SYSEX :
+			// should NOT be a existing sysex msg on this port, kill the existing one
+			if (portIndex != NO_PORT_INDEX) {
+				if (mgInProgress[portIndex].mgStatus == MSG_IN_PROGRESS) {
+					mgInProgress.erase(mgInProgress.begin() + portIndex);
+				}
+			}
+			
+			mgMsg.mgType = MG_SYSEX_MIDI;
+			mgMsg.mgStatus = MSG_IN_PROGRESS;
+			mgMsg.mgPort = port;
+			mgMsg.mgDataV.push_back(ucByte);
+			
+			// STUPID high count-down number for sysex transfers
+			mgMsg.mgCaptureCount = CAPTURE_MAX; 
+			// add to vector
+			mgInProgress.push_back(mgMsg);
+
+			break;
+			//  * * * * * * * * * * * * * * END of sysex msg
+			case SYSEX_END :
+			if (portIndex != NO_PORT_INDEX) {
+				if (mgInProgress[portIndex].mgStatus == MSG_IN_PROGRESS) {
+					mgInProgress[portIndex].mgDataV.push_back(ucByte);
+					mgInProgress[portIndex].mgStatus = MSG_DONE;
+				}
+			}
+			break;
+			
+			// * * * * * * * * * * * * * * * CONTINUE (FILL) the "in process" msg
+			default:
+			if (ucByte < 128) {
+				if (portIndex != NO_PORT_INDEX) {
+					if (mgInProgress[portIndex].mgStatus == MSG_IN_PROGRESS) {
+						mgInProgress[portIndex].mgCaptureCount--;
+						mgInProgress[portIndex].mgDataV.push_back(ucByte);
+						
+						//cout << "Stage 4   fill :  B: "<< (unsigned int)ucByte  << "\tCnt: "  << mgInProgress[portIndex].mgCaptureCount
+						// <<"\tPort: " << mgInProgress[portIndex].mgPort << "\tpIndex: " << portIndex  << endl;
+						
+						// check count for "set" length data
+						if (mgInProgress[portIndex].mgCaptureCount == 0)
+							mgInProgress[portIndex].mgStatus = MSG_DONE;	
 					}
 				}
-				break;
 			}
+			break;
 		}
-		// --------------------------------------------------------------------------------------------------------------------
-		// * * * * * * * * * * * * *  READY to send Sysex
-		// This just clears the "set" input buffers & pushes them on the output vector.
-		// (the queue was originally for sysex data packets - not happening currently, but leaving as-is)
+	}
+	// --------------------------------------------------------------------------------------------------------------------
+	// * * * * * * * * * * * * *  READY to send Sysex/RT/
+	// This just clears the "set" input buffers & pushes them on the output vector.
+	// (the queue was originally for sysex data packets - not happening currently, but leaving as-is)
 	
-		//push on Q
-		for (int qCount = 0; qCount < sysexPorts.size() ; qCount++) {	
-			if (sysexPorts[ qCount].status == SYSEX_DONE) {
-				sysexOutV.push_back(sysexPorts[ qCount ]);
-				sysexPorts[ qCount].status = SYSEX_PREKILL;
-			}
+	//push on Q
+	for (int qCount = 0; qCount < mgInProgress.size() ; qCount++) {	
+		if (mgInProgress[ qCount].mgStatus == MSG_DONE) {
+			mgReady.push_back(mgInProgress[ qCount ]);
+			mgInProgress[ qCount].mgStatus = MSG_KILL;
 		}
-		
-		// delete
-		for (int qCount = sysexPorts.size() - 1; qCount >= 0; qCount--) {
-			if ( sysexPorts[ qCount ].status == SYSEX_PREKILL) {
-				sysexPorts.erase(sysexPorts.begin() + qCount);
-			}
+	}
+	
+	// delete any objs flagged for KILL
+	for (int qCount = mgInProgress.size() - 1; qCount >= 0; qCount--) {
+		if ( mgInProgress[ qCount ].mgStatus == MSG_KILL) {
+			mgInProgress.erase(mgInProgress.begin() + qCount);
 		}
+	}
 }
 
 // --------------------------------------------------------------------------------------
@@ -504,9 +568,11 @@ void initPd(int srate) {
 	// receive messages from pd
 	lpd.setReceiver(&pdObject);
 	lpd.setMidiReceiver(&pdObject);
-	
 	// libpd midi callbacks
 	lpd.receiveMidi();
+	
+	// listen for "P2J" msgs
+	lpd.subscribe("P2J");
 
 	// send DSP 1 message to pd (ON)
 	lpd.computeAudio(true);
@@ -635,9 +701,9 @@ void exitwGrace() {
 int colontokener(char *s, iP2j *duo) {
 
 	char *tok = strtok(s, ":");
-	duo->A = atoi(tok);
+	duo->data[0] = atoi(tok);
 	tok = strtok(nullptr, ":");
-	duo->B = atoi(tok);
+	duo->data[1] = atoi(tok);
 return(0);
 }
 
@@ -696,6 +762,7 @@ int main (int argc, char *argv[]) {
 	char *jName = nullptr;
 	char patchName[] = ".pd";
 	char *pName = nullptr;
+	iP2j Pcount;
    
 	jName = client_name;
 	pName = patchName;
@@ -713,28 +780,28 @@ int main (int argc, char *argv[]) {
 			 switch (opt) 
 			 {
 			  	case 'm':
-				colontokener(optarg, &MPcount);
-				if (MPcount.A < 0 || MPcount.A > MAX_MIDI_PORTS)
+				colontokener(optarg, &Pcount);
+				if (Pcount.data[0] < 0 || Pcount.data[0] > MAX_MIDI_PORTS)
 					MidiIn_TotalPorts = 2;
 					else 
-						MidiIn_TotalPorts = MPcount.A;
-				if (MPcount.B < 0 || MPcount.B > MAX_MIDI_PORTS)
+						MidiIn_TotalPorts = Pcount.data[0];
+				if (Pcount.data[1] < 0 || Pcount.data[1] > MAX_MIDI_PORTS)
 					MidiIn_TotalPorts = 2;
 					else 
-						MidiOut_TotalPorts = MPcount.B;	
+						MidiOut_TotalPorts = Pcount.data[1];	
 				getcnt = optind;
 				break;
 				
 			  	case 'a':
-				colontokener(optarg, &APcount);
-				if (APcount.A < 0 || APcount.A > MAX_AUDIO_PORTS)
+				colontokener(optarg, &Pcount);
+				if (Pcount.data[0] < 0 || Pcount.data[0] > MAX_AUDIO_PORTS)
 					AudioIn_TotalPorts = 2;
 					else 
-						AudioIn_TotalPorts = APcount.A;
-				if (APcount.B < 0 || APcount.B > MAX_AUDIO_PORTS)
+						AudioIn_TotalPorts = Pcount.data[0];
+				if (Pcount.data[1] < 0 || Pcount.data[1] > MAX_AUDIO_PORTS)
 					AudioIn_TotalPorts = 2;
 					else 
-						AudioOut_TotalPorts = APcount.B;	
+						AudioOut_TotalPorts = Pcount.data[1];	
 				getcnt = optind;
 				break;
 				
@@ -750,7 +817,7 @@ int main (int argc, char *argv[]) {
 
 				case 'v':
 				verbose = atoi(optarg);
-				if (verbose < 0 || verbose > 1)
+				if (verbose < 0 || verbose > 2)
 					verbose = 0;
 				getcnt = optind;
 				break;
@@ -798,8 +865,9 @@ int main (int argc, char *argv[]) {
 					}
 				}
 				if (verbose){
-					std::cout << "-Audio: " << AudioIn_TotalPorts << ":" << AudioOut_TotalPorts;
-					std::cout << " Midi: " << MidiIn_TotalPorts << ":" << MidiOut_TotalPorts;
+					std::cout << "Version: " << versionString << endl;
+					std::cout << " -Audio: " << AudioIn_TotalPorts << ":" << AudioOut_TotalPorts;
+					std::cout << " -Midi: " << MidiIn_TotalPorts << ":" << MidiOut_TotalPorts;
 					if (paramCnt) 
 						std::cout << " -Params: " << paramCnt;
 					std::cout << endl;
@@ -807,7 +875,8 @@ int main (int argc, char *argv[]) {
 				// --------------------------------------------------------------------------
 				// 		Loop until it's killed with Ctrl+C
 				while(1){
-					sleep(-1);
+					lpd.receiveMessages();
+					usleep(150);
 				}		  
 			}
 		}
