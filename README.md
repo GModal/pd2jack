@@ -254,8 +254,9 @@ And if it's to be installed system-wide:
 - [Camomile](https://github.com/pierreguillot/Camomile)
 - [libpd](https://github.com/libpd)
 - [Pure Data](https://puredata.info/)
+- The openSUSE DAW: [Geekos DAW](http://geekosdaw.tuxfamily.org/),  [Geekos DAW repository](https://build.opensuse.org/project/show/home:geekositalia:daw)
 
-### Special Thanks
+### Special Thanks To:
 
-#### Special words of thanks to:
+ - Fabio, for assistance with the build process.
 
