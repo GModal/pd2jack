@@ -70,6 +70,22 @@ enum midiMessages {
 	RTSEND_PLAIN = 2,
 };
 
+enum specialCmds {
+	OPEN_PATCH = 0,
+	CLOSE_PATCH,
+	REOPEN_PATCH,
+	SLEEP_TIME
+};
+
+const char * specialT[] = {
+	 "@openPatch",
+	 "@closePatch",
+	 "@reopenPatch",
+	 "@im_sleepTime"
+};
+
+const int SPECIALT_SZ = sizeof(specialT)/sizeof(char*);
+
 // ints
 class iP2j {
 	public:

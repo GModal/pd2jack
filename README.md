@@ -33,7 +33,8 @@ Help: pd2jack <options> -p 'file.pd' <'param strs'>
 
  Optional args:
 -a : Audio ports (0-16) - default: 2:2 
--h : Help msg 
+-h : Help msg
+-i : Interactive mode
 -m : Midi ports (0-16) - default: 1:1
 -n : JACK port Name - default: pd2jack
 -s : Silence Pd [print] objects (no args) - default: Not silent
@@ -45,7 +46,7 @@ Help: pd2jack <options> -p 'file.pd' <'param strs'>
 
 ## Examples
 
-**Simple: **
+**Simple:**
 
     pd2jack -p inout.pd
 
@@ -219,6 +220,57 @@ While the *param.get.pd* abstraction makes the process easy, in it's simplest fo
 
 YES, it would be trivial to add **named** send/receive pairs to this application. I.E., to replace the *parameter#* prefix with a custom parameter string, and send that to a named *receive* object in the patch.
 
+## Interactive Mode
+
+New with v0.1.8, enabling *interactive mode* (-i) interprets any "live stream" input of parameter pairs (in the console) to be passed on as "param" messages to the Pd patch. These work like the startup "parameter pairs," except for:
+
+- No quotes are required
+- Each pair is terminated with a newline
+
+A stream of pairs might look something like this:
+
+```
+1 89
+1 88
+1 87
+1 86
+3 2180
+3 2200
+3 2221
+3 2241
+3 2261
+4 19
+```
+
+NOTE: **this has some cool implications** -- a separate GUI application can act as a front-end, and "pipe" data into *pd2jack*. 
+
+So *ANY* GUI api could be used...just convert any input to parameter pairs and print them to the console. This isn't a crazy as it sounds -- two applications connected with a pipe are separate processes, and if the numeric char strings aren't actually printed to the console (the are not, with pipe), the CPU load is pretty small.
+
+Here's a example of how it's invoked:
+
+    ./revUI | pd2jack -i -p rev_i.pd
+
+And here's how it looks (with a simple XPutty GUI):
+
+![rev_pipe pic](resource/p2j_piping1.png)
+
+There are other options for IPC with Pd (netsend, netreceive & some custom objects) and piping the console might feel like a hack, but it is simple and quick. An additional method (sockets?) might be added to **pd2jack** in the future...(yeah, I'm thinking maybe a plugin interface).
+
+It's also been suggested this mode might be useful for people with disabilities. I've also successfully piped the output of *pd2jack* to a speech synthesis module, sending text via **Pure Data**'s [print] object, as well as any info output in "verbose" mode.
+
+### Interactive Mode Special Commands (w/ "@" prefix)
+
+Interactive mode also includes a set of special cmds, for controlling some internal operations. Each of these cmds is preceeded with an "at" symbol (@), to differentiate the cmds from the parameter stream. Here's a list:
+
+```
+@openPatch <name>     : load a different patch into the LibPd space (closes current patch first).
+@closePatch           : closes the current patch
+@reopenPatch          : reopens the last valid patch (patch can be closed or already open)
+@im_sleepTime <int>   : sleep time (ms, 5-500) between data fetches for interactive mode.
+```
+
+Invoking "@reopenPatch" on an already open patch will *reload* the patch.
+
 ## Compiliation and Installation
 
 The *pd2jack* app is built on and requires **LibPd**. A **LibPd** build is dependent on a current **Pure Data** installation (source and build). The **Pure Data** distribution is a subdir in a **LibPd** install. **LibPd** and it's dependencies are a submodule of the *pd2jack* GIT.
@@ -250,11 +302,11 @@ And if it's to be installed system-wide:
     sudo make install
 
 ### Links:
-
+- [This project](https://github.com/GModal/pd2jack) **pd2jack**
 - [Camomile](https://github.com/pierreguillot/Camomile)
 - [libpd](https://github.com/libpd)
 - [Pure Data](https://puredata.info/)
-- The openSUSE DAW: [Geekos DAW](http://geekosdaw.tuxfamily.org/),  [Geekos DAW repository](https://build.opensuse.org/project/show/home:geekositalia:daw)
+- **pd2jack** is a package in *The openSUSE DAW:* [Geekos DAW](http://geekosdaw.tuxfamily.org/), Repository:  [Geekos DAW repository](https://build.opensuse.org/project/show/home:geekositalia:daw)
 
 ### Special Thanks To:
 
