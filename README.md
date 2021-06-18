@@ -302,7 +302,7 @@ And if it's to be installed system-wide:
     sudo make install
 
 ### Links:
-
+- [This project](https://github.com/GModal/pd2jack) **pd2jack**
 - [Camomile](https://github.com/pierreguillot/Camomile)
 - [libpd](https://github.com/libpd)
 - [Pure Data](https://puredata.info/)
