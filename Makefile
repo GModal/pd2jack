@@ -78,8 +78,8 @@ endif
 	cd $(LIBPD_DIR) && make clobber
 
 install:
-	install -m 755 $(TARGET) $(bindir)
+	install -m 755 $(TARGET) $(DESTDIR)$(bindir)
 
 uninstall:
-	rm -f $(EXEDIR)/$(TARGET)
+	rm -f $(DESTDIR)$(bindir)/$(TARGET)
 	

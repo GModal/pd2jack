@@ -1,3 +1,10 @@
+17_6_2021
+Added interactive mode
+Changed openPatch code to a function (for i mode)
+Infancy of "interactive mode special codes"
+Makefile: $(DESTDIR) added to install & uninstall
+ - Code not currently included, but tested GUI front-ends with interactive mode & pipes
+
 13_6_2021
 More updates to Makefile; single call to "make" will build
 [pd~] not functioning yet

@@ -36,11 +36,15 @@
 using namespace std;
 using namespace pd;
 
-const char versionString[] = "0.1.6";
+const char versionString[] = "0.1.9";
 
 int sampleRate = 0;
 int ticks = 0;
+int sleepyTime = 250;
 int Silence_Print = false;
+int interactive = false;
+int verboseFL = 0;
+char lastPatchName[256];
 
 vector<midiGlobal> mgReady;
 vector<midiGlobal> mgInProgress;
@@ -560,7 +564,7 @@ jack_shutdown (void *arg)
 // ---------------------------------------- Init LibPd ------------------------------
 void initPd(int srate) {
 // init pd
-// initialize 2 inputs, 2 outputs, @ samplerate
+// initialize with ports, @ samplerate
 	if(!lpd.init(AudioIn_TotalPorts, AudioOut_TotalPorts, srate)) {
 		std::cerr << "Could not init pd" << std::endl;
 		exit(1);
@@ -579,7 +583,7 @@ void initPd(int srate) {
 	
 	// add "pd" subdir to path -- to find abstractions
 	lpd.addToSearchPath("./pd");
-	lpd.addToSearchPath("~/pd2jack/pd");
+	lpd.addToSearchPath("~/.pd2jack/pd");
 }
 
 // ----------------------------------- Init JACK client -----------------------------
@@ -610,7 +614,7 @@ void initJPorts() {
 	// JACK shutdown callback
    jack_on_shutdown (client, jack_shutdown, 0);
    
-    // ----------------------------------------------------------- create our AUDIO JACK ports 
+    // --------------------------------create our AUDIO JACK ports -----------------------------
     // adapted from "jack_large_number_of_ports.cpp"
     //
     // ------------------------------------  input ports
@@ -707,6 +711,78 @@ int colontokener(char *s, iP2j *duo) {
 return(0);
 }
 
+// -----------------------------Open Pd patch --------------------------------------- 
+// 				check if file exist & is valid
+bool openPdPatch (char * patchName) {
+int cool = 0;
+
+	if( access( patchName, F_OK ) == 0) {
+		// 		OK, file exists
+		patch = lpd.openPatch(patchName,  "./");
+		
+		if (patch.isValid( )) {
+			cool = 1;
+			strncpy(lastPatchName, patchName, 252);
+		}
+	}
+return(cool);
+}
+
+// ----------------------------  Special Tokens ---------------------------------------
+int specTokens(char *s) {
+char *tok = strtok(s, " ");
+int specID = -1;
+
+	// find special cmd str
+	for (int i = 0; i < SPECIALT_SZ; i++) {
+		if ( !strcmp(tok, specialT[i]) )
+			specID = i;
+	}
+	
+	switch (specID) {
+		
+	case OPEN_PATCH:
+	tok = strtok(nullptr, " ");
+	if (tok) {
+		if (patch.isValid( ))
+			lpd.closePatch(patch);
+		openPdPatch (tok) ;
+		if (verboseFL)
+			cout << "New Patch: " << tok << endl;
+	}
+	break;
+	
+	case CLOSE_PATCH:
+	if (patch.isValid( ))
+		lpd.closePatch(patch);
+	if (verboseFL)
+		cout << "Patch Closed"  << endl;
+	break;
+	
+	case REOPEN_PATCH:
+	if (patch.isValid( ))
+		lpd.closePatch(patch);
+	openPdPatch (lastPatchName) ;
+	if (verboseFL)
+		cout << "Reopened Patch: " << lastPatchName << endl;
+	break;
+	
+	case SLEEP_TIME:
+	tok = strtok(nullptr, " ");
+	if (tok) {
+		int sTime = atoi(tok);
+		if (sTime >= 5 && sTime <= 500)
+			sleepyTime = sTime;
+		
+		if (verboseFL)
+			cout << "InterActive Mode Sleep Delay: " << tok << endl;
+	}	
+	break;
+	}
+	
+return (specID);
+}
+
 // ------------------------------- Parse Parameters ----------------------------------
 int paramtokener(char *s) {
 int cnt = 0;
@@ -755,13 +831,14 @@ int main (int argc, char *argv[]) {
 	int opt;
 	int paramCnt = 0;
 	int legal = 1;
-	int verbose = 0;
 	int getcnt = 1;
+	string inString;
 	jack_nframes_t bufsize;
 	char client_name[] = "pd2jack";
 	char *jName = nullptr;
 	char patchName[] = ".pd";
 	char *pName = nullptr;
+	char *interStr;
 	iP2j Pcount;
    
 	jName = client_name;
@@ -775,7 +852,7 @@ int main (int argc, char *argv[]) {
 		}
 		else {
 		
-		  while ((opt = getopt(argc, argv, "a:hm:n:p:sv:")) != -1) 
+		  while ((opt = getopt(argc, argv, "a:him:n:p:sv:")) != -1) 
 		  {
 			 switch (opt) 
 			 {
@@ -816,9 +893,9 @@ int main (int argc, char *argv[]) {
 				break;
 
 				case 'v':
-				verbose = atoi(optarg);
-				if (verbose < 0 || verbose > 2)
-					verbose = 0;
+				verboseFL = atoi(optarg);
+				if (verboseFL < 0 || verboseFL > 2)
+					verboseFL = 0;
 				getcnt = optind;
 				break;
 
@@ -830,6 +907,12 @@ int main (int argc, char *argv[]) {
 				case 'h':
 				legal = 0;
 				break;
+				
+				case 'i':
+				interactive = true; 
+				sleepyTime = 80;
+				getcnt = optind;
+				break;
 								
 			  	case '?':
 			  	legal = 0;
@@ -837,18 +920,13 @@ int main (int argc, char *argv[]) {
 			 }
 		  }
 
-		std::string filenm = pName;
-		const char * fstr = filenm.c_str();
+		sampleRate = initJack(jName);
+		initPd(sampleRate);
 		
-		if( access( fstr, F_OK ) == 0 && legal) {
-    		// 		OK, file exists
-			sampleRate = initJack(jName);
-			initPd(sampleRate);
-			// 		load the Pd patch
-	   		patch = lpd.openPatch(pName, "./");
-	   			
-			// Always check to see if file opening succeeded
-			if(patch.isValid( )) {
+		if (legal) {
+			// load the Pd patch
+	   		// Checks to see if file opening succeeded
+	   		if (openPdPatch (pName) )  {
 				// 		init the port buffers
 				bufsize = jack_get_buffer_size(client);
 				
@@ -857,30 +935,47 @@ int main (int argc, char *argv[]) {
 				if (AudioOut_TotalPorts)
 					output = new float [bufsize*AudioOut_TotalPorts*sizeof(float)];
 					
-				initJPorts();			// 	initialize the Audio ports			
+				initJPorts();		// 	initialize the Audio ports			
 				if (getcnt < argc ) {
 					for (int i = getcnt; i < argc; i++) {
 						if (paramtokener(argv[i]))
 							paramCnt++;
 					}
 				}
-				if (verbose){
+				if (verboseFL){
 					std::cout << "Version: " << versionString << endl;
 					std::cout << " -Audio: " << AudioIn_TotalPorts << ":" << AudioOut_TotalPorts;
 					std::cout << " -Midi: " << MidiIn_TotalPorts << ":" << MidiOut_TotalPorts;
+					
 					if (paramCnt) 
 						std::cout << " -Params: " << paramCnt;
 					std::cout << endl;
+					std::cout << "Sleep Delay: " << sleepyTime << endl;
 				}
 				// --------------------------------------------------------------------------
 				// 		Loop until it's killed with Ctrl+C
 				while(1){
-					lpd.receiveMessages();
-					usleep(150);
+					// input param pairs, separate w/newline
+					if (interactive) {
+						getline(cin, inString);
+						
+						if (inString.size()) {
+							interStr = (char *)inString.c_str();
+							// special interactive msgs start with "@"
+							if (interStr[0] == 64)	
+								specTokens(interStr);
+							else
+								paramtokener(interStr);
+						}
+					}
+					usleep(sleepyTime);
 				}		  
 			}
+			else
+				legal = false;
 		}
-		else 
+		
+	if (!legal)
 		helpMsg();
 	}
 	exitwGrace();
