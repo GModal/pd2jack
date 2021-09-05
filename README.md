@@ -12,7 +12,7 @@
  - Inter-Process Communication with OSC and pipes. Patches can send and receive a variety of OSC messages.
  - *pd2jack* itself can be controlled via OSC.
 
-###Open the [*Interactive Mode* command & IPC (Open Sound Control) documentation](IMode_IPC.md)
+### Open the [*Interactive Mode* command & IPC (Open Sound Control) documentation](IMode_IPC.md)
 
 Example patch "synths.pd" (shown in the *Claudia* patchbay)
 
