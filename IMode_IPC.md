@@ -59,7 +59,7 @@ Parameter Pairs are two numbers, separated with a space:
 ## The Commands
 _________________________________________________________________________________________________
 
-###LibPd/Pd settings
+### LibPd/Pd settings
 
 	@openpatch <path/name>         : Opens a patch file. Multiple patches can be open concurrently
 	@closepatch <index optional>   : Close the patch <index#>. No arg == close all patches. Arg 0 == close first patch
@@ -69,13 +69,13 @@ ________________________________________________________________________________
 	@bypass <0:1 optional>         : Bypass Pd processing, On/Off. No arg == bypass ON (1)
 	@bypassoff                     : No bypass, processing performed
 
-###Direct data send
+### Direct data send
 
 	@sendbang <recv>				: Send Bang to a receive obj
 	@sendfloat <recv> <float>		: Send Float to a receive obj
 	@sendsymbol <recv> <symbol>	    : Send Symbol to a receive obj
 
-###Compound msg data send
+### Compound msg data send
 
 	@startmsg						: Start a compound message
 	@addfloat <float>				: Add Float to a compound message
@@ -83,7 +83,7 @@ ________________________________________________________________________________
 	@endmsg <recv> <symbol>			: Finish (& send) a compound message
 	@endlist <recv>					: Finish (& send) a compound list
 
-###Compound Message Examples
+### Compound Message Examples
 
 Compound message "List" example:
 
@@ -107,7 +107,7 @@ Compound message, "Message" example:
 
 Compound Msg examples adapted from LibPd's "PdBase.hpp" include file.
 
-###Receive Data
+### Receive Data
 
 Param pairs:
 
@@ -118,7 +118,7 @@ I.E., the preset, standard receiving object *name* for the abstraction **param.g
 
 The *receive obj name* is added internally to the parameter pair by **pd2jack**.
 
-###MIDI commands
+### MIDI commands
 
 While the standard way to input MIDI to a Pure Data patch is via the MIDI ports, MIDI data can also be sent to the patch via special commands.
 
@@ -138,7 +138,7 @@ While the standard way to input MIDI to a Pure Data patch is via the MIDI ports,
     @b <chan> <val f>           : Short version of @sendPBend
     @s <port> <byte>            : Short version of @sendSysex
 
-###Non-Pd cmds
+### Non-Pd cmds
 
 	@quit							: Exit pd2jack
     @imode <0:1>                    : Interactive mode, on/off
@@ -150,11 +150,11 @@ While the standard way to input MIDI to a Pure Data patch is via the MIDI ports,
 	@-e								: Get status / last error
 	@-v								: Return version #
 
-##IPC control of pd2jack
+## IPC control of pd2jack
 
 pd2jack has two methods of Inter-Process Communication: **pipes** and **OSC**.
 
-###Using Pipes
+### Using Pipes
 
 Among the implications, a separate GUI application can act as a front-end, and pipe it's data into *pd2jack*. 
 
@@ -176,13 +176,13 @@ There are other options for IPC with Pd (netsend, netreceive & some custom objec
 
 It's also been suggested this mode might be useful for people with disabilities. I've also successfully piped the output of *pd2jack* to a speech synthesis module, sending text via **Pure Data**'s [print] object, as well as any info output in "verbose" mode.
 
-##Using OSC
+## Using OSC
 
 Instead of pipes, there's a better way: OSC, or *Open Sound Control*. OSC also offers bi-directional communication.
 
 So, why have external OSC support for *pd2jack*, when OSC is built into **Pure Data**? One important reason is the IMode commands, they should be accessable from *outside* the patch, i.e., by a client. Another reason is portability -- transfer Pd patches with minimal changes to *pd2jack*. Simplicity is important, too.
 
-###Set the ID # (Descriptor)
+### Set the ID # (Descriptor)
 
 Each instance of pd2jack can have a unique ID integer. Set the ID with the optional argument -d, from the console at startup:
 
@@ -193,7 +193,7 @@ Each instance of pd2jack can have a unique ID integer. Set the ID with the optio
 
 All OSC packets include that identifier, which can be used to target different instances of *pd2jack*, and separate client apps. That holds for both input and output.
 
-###The OSC URL
+### The OSC URL
 
 The OSC URL is sent to stdout on startup if pd2jack is invoked with the verbose option (-v 1). It will output *something* like this:
 
@@ -210,7 +210,7 @@ For example, here's a common way of invoking in verbose interactive mode, OSC en
 
     pd2jack -v 1 -i -o -O 224.0.0.1 -p pd/phase_vo.pd
 
-##Helper Abstractions
+## Helper Abstractions
 
 Helper abstractions are small Pd code blocks that hide some basic functionality, for the sake of simplicity.
 
@@ -232,7 +232,7 @@ Helper abstractions are small Pd code blocks that hide some basic functionality,
 
         param.get.pd        [param.get <param#> <optional obj name>]    + one data outlet
 
-##Examples
+## Examples
 
 Some general example on using OSC, some with the "helper" abstractions, some without.
 
@@ -284,7 +284,7 @@ The *pd2jack* parent can also receive IMode cmds directly (from a patch) with:
 
 In the case of patch->pd2jack cmds, they are handled internally (not sent via network). The "P2J" receive obj is only valid in the parent *pd2jack* instance, so no ID numbers are used.
 
-###OSC msg formats : the client (external control)
+### OSC msg formats : the client (external control)
 
 A client sends messages to a **receiving** pd2jack instance like this:
 
