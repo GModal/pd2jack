@@ -250,11 +250,11 @@ Note: the above illustration is fragments from two separate patches (server and 
 
 ![oscExamples3 pic](resource/oscExamp3.png)
 
-##OSC - Actual Message Data
+## OSC - Actual Message Data
 
 This is important, particularly for writing clients.
 
-###OSC msg formats : the server (pd2jack instance)
+### OSC msg formats : the server (pd2jack instance)
 
 A running instance of *pd2jack* (server) **sends** outgoing OSC msgs in this format:
 
