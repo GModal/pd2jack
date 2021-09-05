@@ -7,7 +7,7 @@
  
  // "pd2jack" by Doug Garmon
  
-#include "PdObject.h"
+#include "PdObject.hpp"
 #include <iostream>
 
 using namespace std;
@@ -23,9 +23,3 @@ void PdObject::receiveBang(const std::string& dest) {
 void PdObject::receiveSymbol(const std::string& dest, const std::string& symbol) {
 	cout << "P2J: symbol " << dest << ": " << symbol << endl;
 }
-
-void PdObject::receiveList(const std::string& dest, const List& list) {
-	cout << "P2J: list " << dest << ": " << list << endl;
-}
-
-

@@ -1,15 +1,18 @@
 
 ## pd2jack
 
-...is a shell application for running **Pure Data** patches as minimalist JACK clients, using **LibPd**. I.E., the patches run "headless" and without a GUI. However, parameters can be passed to the patch from the cmd line. See "Passing Parameters" below...
+...is a shell application for running **Pure Data** patches as minimalist JACK clients, using **LibPd**. I.E., the patches run "headless" and without a GUI. However, parameters can be passed to the patch from the cmd line (and now via OSC). See "Passing Parameters" below or click on the *IMode cmd & IPC documentation* link...
 
-Now in beta release, **pd2jack** has currently only been tested on Linux.
+**pd2jack** has currently only been tested on Linux.
 
 ### Features
 
  - Up to 16 audio ports and/or 16 MIDI ports can be opened per instance. Ports are defined at startup with cmd arguments, not by the Pd patch.
- - Parameters can be passed to the Pd patch from the shell (not interactively, currently).
+ - An *Interactive Mode*, where parameter pairs and commands can be passed to the patch (and to pd2jack).
+ - Inter-Process Communication with OSC and pipes. Patches can send and receive a variety of OSC messages.
+ - *pd2jack* itself can be controlled via OSC.
 
+###Open the [*Interactive Mode* command & IPC (Open Sound Control) documentation](IMode_IPC.md)
 
 Example patch "synths.pd" (shown in the *Claudia* patchbay)
 
@@ -32,14 +35,18 @@ Help: pd2jack <options> -p 'file.pd' <'param strs'>
 -p : Pd patch Name, with valid path
 
  Optional args:
--a : Audio ports (0-16) - default: 2:2 
+-a : Audio ports (0-16) <i:i> - default: 2:2 
+-d : Descriptor <ID str>
 -h : Help msg
--i : Interactive mode
--m : Midi ports (0-16) - default: 1:1
--n : JACK port Name - default: pd2jack
--s : Silence Pd [print] objects (no args) - default: Not silent
+-i : Interactive Mode
+-m : Midi ports (0-16) <i:i> - default: 1:1
+-n : JACK port Name
+-o : OSC I/O Mode
+-P : OSC port #s <in:out> - default: 20331:20341
+-I : OSC In URL <addr> - default: auto
+-O : OSC Out URL <addr> - default: auto
+-s : Silence Pd [print] objects
 -v : verbosity (0-1) - default: 0
-
 ```
 
 **Quit:** CTRL C
@@ -52,7 +59,7 @@ Help: pd2jack <options> -p 'file.pd' <'param strs'>
 
 Open the patch "inout.pd" in the current dir, with the default settings.
 
-**Using all options:**
+**Example options:**
 
     pd2jack -p ./pd/rev_ctrl.pd -n MyPatch -s -v 1 -a 2:2 -m 1:0 '1 90' '2 99' '3 0.7'
 
@@ -220,56 +227,17 @@ While the *param.get.pd* abstraction makes the process easy, in it's simplest fo
 
 YES, it would be trivial to add **named** send/receive pairs to this application. I.E., to replace the *parameter#* prefix with a custom parameter string, and send that to a named *receive* object in the patch.
 
-## Interactive Mode
+## pd2jack Interactive Mode
 
 New with v0.1.8, enabling *interactive mode* (-i) interprets any "live stream" input of parameter pairs (in the console) to be passed on as "param" messages to the Pd patch. These work like the startup "parameter pairs," except for:
 
 - No quotes are required
 - Each pair is terminated with a newline
 
-A stream of pairs might look something like this:
+There are now a number of special commands for controlling the patch and LibPd, in addition to the "parameter pair" interface.
 
-```
-1 89
-1 88
-1 87
-1 86
-3 2180
-3 2200
-3 2221
-3 2241
-3 2261
-4 19
-```
+###[Read more about IMode commands](IMode.md)
 
-NOTE: **this has some cool implications** -- a separate GUI application can act as a front-end, and "pipe" data into *pd2jack*. 
-
-So *ANY* GUI api could be used...just convert any input to parameter pairs and print them to the console. This isn't a crazy as it sounds -- two applications connected with a pipe are separate processes, and if the numeric char strings aren't actually printed to the console (the are not, with pipe), the CPU load is pretty small.
-
-Here's a example of how it's invoked:
-
-    ./revUI | pd2jack -i -p rev_i.pd
-
-And here's how it looks (with a simple XPutty GUI):
-
-![rev_pipe pic](resource/p2j_piping1.png)
-
-There are other options for IPC with Pd (netsend, netreceive & some custom objects) and piping the console might feel like a hack, but it is simple and quick. An additional method (sockets?) might be added to **pd2jack** in the future...(yeah, I'm thinking maybe a plugin interface).
-
-It's also been suggested this mode might be useful for people with disabilities. I've also successfully piped the output of *pd2jack* to a speech synthesis module, sending text via **Pure Data**'s [print] object, as well as any info output in "verbose" mode.
-
-### Interactive Mode Special Commands (w/ "@" prefix)
-
-Interactive mode also includes a set of special cmds, for controlling some internal operations. Each of these cmds is preceeded with an "at" symbol (@), to differentiate the cmds from the parameter stream. Here's a list:
-
-```
-@openPatch <name>     : load a different patch into the LibPd space (closes current patch first).
-@closePatch           : closes the current patch
-@reopenPatch          : reopens the last valid patch (patch can be closed or already open)
-@im_sleepTime <int>   : sleep time (ms, 5-500) between data fetches for interactive mode.
-```
-
-Invoking "@reopenPatch" on an already open patch will *reload* the patch.
 
 ## Compiliation and Installation
 

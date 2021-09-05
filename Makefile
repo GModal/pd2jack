@@ -49,17 +49,20 @@ endif
 
 LIBPD_DIR = ./libpd
 LIBPDA = $(LIBPD_DIR)/libs/libpd.$(alib_ext)
+LIBLO = $(prefix)/$(SOLIB_PREFIX)/x86_64-linux-gnu/
 
-SRC_FILES = src/PdObject.cpp src/main.cpp src/pd2jack.hpp
+SRC_FILES = src/pd2jack.cpp src/PdObject.cpp src/hash.cpp src/interactive.cpp src/ipc.cpp
+DEPS = src/pd2jack.hpp src/PdObject.hpp src/interactive.hpp src/hash.hpp 
 TARGET = pd2jack
 
-CXXFLAGS += -I$(LIBPD_DIR)/cpp -I$(LIBPD_DIR)/libpd_wrapper -I$(LIBPD_DIR)/libpd_wrapper/util -Wl,–export-dynamic \
-           -I./src -std=c++11 -DLIBPD_USE_STD_MUTEX -O3
+CXXFLAGS += -I$(LIBPD_DIR)/cpp -I$(LIBPD_DIR)/libpd_wrapper -I$(LIBPD_DIR)/libpd_wrapper/util \
+	-Wl,–export-dynamic \
+	-I./src -std=c++11 -DLIBPD_USE_STD_MUTEX -O3
 
 .PHONY: clean clobber
 
 $(TARGET): ${SRC_FILES:.cpp=.o} $(LIBPDA) 
-	g++ -o $(TARGET) $^ -L.$(LIBPDA) $(AUDIO_API)
+	g++ -o $(TARGET) $^ -L.$(LIBPDA) $(AUDIO_API) -L$(LIBLO) -llo
 ifeq ($(PLATFORM), mac)
 	mkdir -p ./libs && cp $(LIBPD) ./libs
 endif

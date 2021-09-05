@@ -1,3 +1,22 @@
+5_9_21
+Too many additions to list. High points:
+	-more cmds
+	-OSC IPC mode added (major update)
+	-Interactive mode now non-blocking
+	-Patch i/o now methods in p2jBase class
+	-more
+
+28_6_21
+More cmds added to I Mode
+Source files split, now multiple files
+Changed keyword lookup to hash function & exec to pointer-to-fn
+Moved global data to a parent class (p2jBase)
+Some minor Makefile fixes
+
+20_6_2021
+Many more interactive cmds added
+Added interactive prompt
+
 17_6_2021
 Added interactive mode
 Changed openPatch code to a function (for i mode)

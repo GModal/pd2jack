@@ -1,0 +1,53 @@
+#N canvas 159 457 1078 465 10;
+#X obj 43 78 cnv 15 300 350 empty empty pd2jack 20 12 0 18 -233017
+-66577 0;
+#X obj 376 78 cnv 15 500 350 empty empty MobMuPlat 20 12 0 18 -261682
+-66577 0;
+#X msg 64 140 \; sendlabel 1 Depth \; sendlabel 2 Speed \; sendlabel
+3 FeedBack \; sendlabel 4 Clipping \; sendlabel 5 Stereo/Mono Mix \;
+sendtitle Phaser vo \;;
+#X obj 67 253 r sendlabel;
+#X obj 67 389 s P2Jos;
+#X obj 110 308 r sendtitle;
+#X obj 67 363 list trim;
+#X obj 110 332 list prepend lab_t;
+#X obj 67 279 list prepend labl;
+#X obj 64 108 loadbang;
+#X obj 393 129 receive fromNetwork;
+#X obj 393 157 route list;
+#X obj 544 393 send toGUI;
+#X obj 544 346 list prepend /lab_t;
+#X text 553 325 Send a multi-element string to the title label;
+#X obj 393 185 route /P2Jsrv/0/labl /P2Jsrv/0/lab_t, f 41;
+#X obj 393 244 t list list;
+#X obj 427 296 list prepend;
+#X msg 479 270 /lab_\$1;
+#X obj 393 270 list split 1;
+#X text 36 12 Updating the names of (labels) widgets in MobMuPlat from
+a pd2jack patch \, plus a "title" label., f 96;
+#X text 34 54 This technique allows for variable-length labels with
+whitespace in MobMuPlat, f 81;
+#X text 401 210 Append an index# to lab_ for "lab_#" labels \, then
+send on the string, f 44;
+#X text 501 30 The title: /lab_t;
+#X text 98 30 The label addrs: /lab_1 \, /lab_2 \, /lab_3 \, /lab_4
+\, /lab_5;
+#X text 692 21 NOTE: this patch doesn't DO anything \, as it's fragments
+of two different patches \, one for a server \, one for a client.;
+#X text 818 53 I.E. \, for illustrative purposes only.;
+#X connect 3 0 8 0;
+#X connect 5 0 7 0;
+#X connect 6 0 4 0;
+#X connect 7 0 6 0;
+#X connect 8 0 6 0;
+#X connect 9 0 2 0;
+#X connect 10 0 11 0;
+#X connect 11 0 15 0;
+#X connect 13 0 12 0;
+#X connect 15 0 16 0;
+#X connect 15 1 13 0;
+#X connect 16 0 19 0;
+#X connect 16 1 18 0;
+#X connect 17 0 12 0;
+#X connect 18 0 17 1;
+#X connect 19 1 17 0;

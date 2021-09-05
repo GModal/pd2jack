@@ -1,0 +1,10 @@
+#N canvas 654 277 637 383 10;
+#X obj 103 94 r Cindy;
+#X obj 225 93 r Herbert;
+#X obj 103 123 print Cindy says;
+#X obj 225 123 print Herb says;
+#X obj 135 190 param.get 1;
+#X obj 135 221 print 'param' #1 says;
+#X connect 0 0 2 0;
+#X connect 1 0 3 0;
+#X connect 4 0 5 0;
