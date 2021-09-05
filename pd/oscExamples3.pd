@@ -1,0 +1,61 @@
+#N canvas 680 114 968 854 10;
+#X obj 634 122 sendOSC hello 8;
+#X obj 634 91 param.get 8;
+#X text 205 142 "explicit" verson of OSC parameter pair send, f 26
+;
+#X text 53 143 Std OSC parameter pair send, f 22;
+#X obj 112 118 param.set 7;
+#X obj 203 118 sendOSC pp 7;
+#X obj 320 118 s P2JoS;
+#X text 319 69 Non-helper version;
+#X obj 203 50 param.get 1;
+#X msg 320 92 pp 7 \$1;
+#X text 130 30 These three send the same pp msg:;
+#X text 583 56 Non-pp OSC msg: </addr> <index> <float> Where the inlet
+gets float, f 40;
+#X obj 36 192 cnv 15 900 240 empty empty empty 20 12 0 14 -261682 -66577
+0;
+#X obj 275 307 t b b;
+#X obj 54 309 t b b;
+#X obj 54 366 sendOSC+;
+#X msg 320 333 hello 2 4.3 what is this 6;
+#X obj 275 364 sendOsC+;
+#X msg 99 337 note syn1 1 44 64;
+#X text 273 386 sendOsC sends symbols as strings;
+#X text 48 386 sendOSC sends symbols as symbols;
+#X obj 516 265 param.get 2;
+#X obj 54 284 param.get 5;
+#X obj 275 282 param.get 6;
+#X obj 516 289 t b;
+#X msg 516 314 list note syn1 1 44 64;
+#X obj 709 335 param.get 3;
+#X obj 664 251 param.get 4;
+#X obj 664 276 t b;
+#X msg 709 359 note brass2 1 44 64;
+#X obj 664 384 sendOSC+;
+#X text 676 298 Right inlet stores \, but doesn't send. Right inlet
+can be non-list msg \, or list., f 37;
+#X text 212 206 Variable-length OSC msgs \, using sendOSC and sendOsC
+, f 30;
+#X text 478 231 Lists get send immediately on left inlet, f 27;
+#X text 664 231 Bang left inlet to send stored msg;
+#X connect 1 0 0 0;
+#X connect 8 0 5 0;
+#X connect 8 0 9 0;
+#X connect 8 0 4 0;
+#X connect 9 0 6 0;
+#X connect 13 0 17 0;
+#X connect 13 1 16 0;
+#X connect 14 0 15 0;
+#X connect 14 1 18 0;
+#X connect 16 0 17 1;
+#X connect 18 0 15 1;
+#X connect 21 0 24 0;
+#X connect 22 0 14 0;
+#X connect 23 0 13 0;
+#X connect 24 0 25 0;
+#X connect 25 0 30 0;
+#X connect 26 0 29 0;
+#X connect 27 0 28 0;
+#X connect 28 0 30 0;
+#X connect 29 0 30 1;

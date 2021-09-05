@@ -1,0 +1,12 @@
+#N canvas 260 664 297 310 10;
+#X obj 62 45 inlet;
+#X obj 62 115 list store;
+#X obj 119 77 inlet;
+#X obj 62 77 t b;
+#X obj 62 150 list trim;
+#X obj 62 186 s P2Jos;
+#X connect 0 0 3 0;
+#X connect 1 0 4 0;
+#X connect 2 0 1 1;
+#X connect 3 0 1 0;
+#X connect 4 0 5 0;
