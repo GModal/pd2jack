@@ -5,6 +5,8 @@
 
 **pd2jack** has currently only been tested on Linux.
 
+**Note:** the [LibLo OSC protocol library](http://liblo.sourceforge.net/) is now a dependency. It's included in the repositories of several distributions (Ubuntu, Debian, openSUSE, etc.) Both the dynamic library and the development files are required.
+
 ### Features
 
  - Up to 16 audio ports and/or 16 MIDI ports can be opened per instance. Ports are defined at startup with cmd arguments, not by the Pd patch.
