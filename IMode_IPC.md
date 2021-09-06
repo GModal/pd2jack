@@ -202,13 +202,28 @@ The OSC URL is sent to stdout on startup if pd2jack is invoked with the verbose 
      -ID: 0
      -OSC server URL: osc.udp://mycomputer-0xx:20331/ Out: osc.udp://224.0.0.1:20341/
 
+### Standard Ports
+
+The OSC UDP port #s are:
+
+    Receive (incoming):     20331
+    Sending (outgoing):     20341
+
+    Use the -P option to set ports:
+    -P 20332:20342
+
 In default mode the OSC address should work with clients running on the local machine, and remote clients (TouchOSC or MobMuPlat) can send OSC data **to** *pd2jack*. To send outgoing data to remote clients, the -O option should be set to the multicast group:
 
     -O 224.0.0.1
 
+    Set the input URL with -I
+    -I <IP addr>
+
 For example, here's a common way of invoking in verbose interactive mode, OSC enabled, and sending OSC to a group multicast addr (communicating with an external device on a local router):
 
     pd2jack -v 1 -i -o -O 224.0.0.1 -p pd/phase_vo.pd
+
+Currently *pd2jack* doesn't use a full "LibLo" URL descriptor to set the net addresses, the net addr and ports are set separately.
 
 ## Helper Abstractions
 
