@@ -236,7 +236,7 @@ New with v0.1.8, enabling *interactive mode* (-i) interprets any "live stream" i
 
 There are now a number of special commands for controlling the patch and LibPd, in addition to the "parameter pair" interface.
 
-###[Read more about IMode commands](IMode.md)
+### [Read more about IMode commands](IMode_IPC.md)
 
 
 ## Compiliation and Installation
@@ -244,6 +244,8 @@ There are now a number of special commands for controlling the patch and LibPd, 
 The *pd2jack* app is built on and requires **LibPd**. A **LibPd** build is dependent on a current **Pure Data** installation (source and build). The **Pure Data** distribution is a subdir in a **LibPd** install. **LibPd** and it's dependencies are a submodule of the *pd2jack* GIT.
 
 As of the first "official" release *pd2jack* is currently statically-linked to the **LibPd** Library (libpd.a). This results in a larger executable, but as *LibPd* isn't widely available in a distro package format (deb, rpm, etc), it's the only way to distribute the project without building the dependencies from source (AFAIK, the library isn't pre-compiled for Ubuntu, for instance).
+
+*pd2jack* now requires the **liblo** OSC protocol implementation to complile (both the library and the dev package). Both Debian and Ubuntu have usable versions in their repositories (tested on 0.29 or greater).
 
 Building from source is a good idea, though. Here's how:
 
