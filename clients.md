@@ -13,6 +13,16 @@ Swap is a demo app that switches between two patches. It comes in multiple versi
     swap.mmp
     swap.pd
 
+From the "Network" menu (start w/upper left menu, then click three dots on upper right, chose Network):
+Select:
+
+   - **Multicast & Direct**
+   - Broadcast IP address: 224.0.0.1
+   - Output Port:            20331
+   - Input Port:             20341
+
+Then return to the "Documents" menu.
+
 Start the MobMuPlat app, then load "swap.mmp" from the documents prompt (upper left corner). You'll see a an interface very much like this:
 
 ![swap mobmuplat pic](resource/swap_mmp.jpg)
@@ -25,7 +35,7 @@ Start the MobMuPlat app, then load "swap.mmp" from the documents prompt (upper l
     or if pd2jack isn't globally installed:
     ./pd2jack -v 1 -i -o -O 224.0.0.1 -p pd/phase_vo.pd
 
-This will start pd2jack in verbose interactive mode, with OSC enabled and a multicast group for outgoing OSC (the URL of 224.0.0.1 is standard for home routers, but could be different on commercial or education networks).
+This will start pd2jack in verbose interactive mode, with OSC enabled and a multicast group for outgoing OSC. The URL of 224.0.0.1 is standard for home routers, but could be different on commercial or education networks. This also holds for the MobMuPlat broadcast IP address.
 
 ### Using the Swap client
 
