@@ -37,6 +37,6 @@ Instructions for installing MobMuPlat can be found on the website: [MobMuPlat ho
 
 ## Other versions of Swap 
 
-Other versions can be found (and future client examples) can be found as "release assets" with each major release of pd2jack. As those become less alpha, they'll be moved to the *client* folder.
+Other versions (and future client examples) can be found as "release assets" with each major release of pd2jack. As those become less alpha, they'll be moved to the *client* folder.
 
 (The c versions work well, but there hasn't been time to construct makefiles, etc.)
