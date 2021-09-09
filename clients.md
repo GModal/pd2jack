@@ -1,6 +1,6 @@
 ## pd2jack OSC Clients
 
-A running instance of pd2jack can act as an OSC server, with a networked client acting as a GUI. Examples can be found in the **client** folder.
+A running instance of *pd2jack* can act as an OSC server, with a networked client acting as a GUI. Examples can be found in the **client** folder.
 
 ## Swap
 
@@ -35,13 +35,15 @@ Start the MobMuPlat app, then load "swap.mmp" from the documents prompt (upper l
     or if pd2jack isn't globally installed:
     ./pd2jack -v 1 -i -o -O 224.0.0.1 -p pd/phase_vo.pd
 
-This will start pd2jack in verbose interactive mode, with OSC enabled and a multicast group for outgoing OSC. The URL of 224.0.0.1 is standard for home routers, but could be different on commercial or education networks. This also holds for the MobMuPlat broadcast IP address.
+This will start *pd2jack* in verbose interactive mode, with OSC enabled and a multicast group for outgoing OSC. The URL of 224.0.0.1 is standard for home routers, but could be different on commercial or education networks. This also holds for the MobMuPlat broadcast IP address.
+
+(The patch paths (in "swap.pd") are set for the subdir "pd", so the demo won't function unless the patches are in that folder. Edit "swap.pd" if other behavior is preferred.)
 
 ### Using the Swap client
 
-   - Changing a widgets will alter the values in the patch. 
+   - Changing a widget will alter the values in the patch.
 
-   - Select "Load Patch" and choose one of the two patches to load. The widget labels will change to correspond with the patch.
+   - Select "Load Patch" and choose one of the two patches to load. **pd2jack** will clear the previous patch, and load the new one. The widget labels will change to correspond with the new patch.
 
 Instructions for installing MobMuPlat can be found on the website: [MobMuPlat home.](https://danieliglesia.com/mobmuplat/)
 

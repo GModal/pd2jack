@@ -21,7 +21,7 @@ using namespace std;
 
 const int MAX_AUDIO_PORTS = 16;
 const int MAX_MIDI_PORTS = 16;
-const string versionString = "0.3.9";
+const string versionString = "0.4.0";
 
 enum midiGlobalTypes {
 	// MIDI consts

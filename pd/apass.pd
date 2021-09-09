@@ -1,0 +1,6 @@
+#N canvas 769 511 702 383 10;
+#X obj 129 103 dac~;
+#X obj 129 75 adc~;
+#X text 120 135 Audio 2 chan pass-through;
+#X connect 1 0 0 0;
+#X connect 1 1 0 1;
